@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Grasshopper.Kernel;
 using Rhino;
+using Rhino.DocObjects;
 using Rhino.Geometry;
 
 namespace EarthToRhino.Components
@@ -61,19 +62,23 @@ namespace EarthToRhino.Components
                 return;
             }
 
-            //foreach (RhinoDoc.Objects obj in doc.Objects) { 
-            //    if(obj == null) continue;
-            //    try
-            //    {
-            //        meshList.Add(obj.Geometry);
+            foreach (RhinoObject obj in doc.Objects)
+            {
+                if (obj == null) continue;
+                try
+                {
+                    if (obj.Geometry is GeometryBase geom)
+                    {
+                        meshList.Add((Mesh)geom); // Add geometry to the list
+                    }
 
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        Debug.WriteLine(e);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
 
-            //    }
-            //}
+                }
+            }
 
             DA.SetDataList(0, allFiles);
             DA.SetDataList(1, meshList);
