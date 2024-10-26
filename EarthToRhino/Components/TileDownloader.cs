@@ -4,6 +4,16 @@ using System.Net;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
+
+using System.IO;
+
+using System.Threading.Tasks;
+
+using Grasshopper.Kernel.Types;
+using Newtonsoft.Json;
+using DocumentFormat.OpenXml.Drawing;
+
+
 namespace EarthToRhino.Components
 {
     public class TileDownloader : GH_Component
@@ -45,9 +55,11 @@ namespace EarthToRhino.Components
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager
+ pManager)
         {
-
+            pManager.AddTextParameter("Message",
+ "Message", "Status message", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -56,27 +68,42 @@ namespace EarthToRhino.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            int levelOfDetail = 0;
-            Rectangle3d boundary = new Rectangle3d();
-            string tempFolder = "";
             string apiKey = "";
+            GH_Rectangle rect = null;
+            string outputDir = "";
 
-            DA.GetData(0, ref levelOfDetail);
-            DA.GetData(1, ref boundary);
-            DA.GetData(2, ref tempFolder);
-            DA.GetData(3, ref apiKey);
-            
-
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "API Key is missing");
+            if (!DA.GetData(0, ref apiKey) || !DA.GetData(1, ref rect) || !DA.GetData(2, ref outputDir))
                 return;
+
+            // Construct the Google Maps API URL
+            //string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={rect.CenterPoint.X},{rect.CenterPoint.Y}&key={apiKey}";
+            string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={0},{0}&key={apiKey}";
+            // Download the JSON response
+            using (WebClient client = new WebClient())
+            {
+                string json = client.DownloadString(url);
+
+                // Parse the JSON response to extract tile URLs
+                // ... (Implement JSON parsing and tile URL extraction)
+                // Parse the JSON response
+                dynamic jsonData = JsonConvert.DeserializeObject(json);
+
+                // Extract tile URLs from the JSON object
+                List<string> tileUrlsList = new List<string> { "tile1.jpg", "tile2.jpg", "tile3.jpg" };
+                IEnumerable<string> tileUrls = tileUrlsList;
+                //IEnumerable<string> tileUrls = jsonData.tiles?.Select(tile => tile?.url);
+
+                // Download each tile and save to the output directory
+                foreach (string tileUrl in tileUrls)
+                {
+                    using (WebClient tileClient = new WebClient())
+                    {
+                        tileClient.DownloadFile(tileUrl, System.IO.Path.Combine(outputDir, System.IO.Path.GetFileName(tileUrl)));
+                    }
+                }
+
+                DA.SetData(0, "Tiles downloaded successfully.");
             }
-
-            WebAPI.SetApiKey(apiKey);
-
-            TileHandler tileHandler = new TileHandler();
-            tileHandler.GetRoot();
         }
 
         /// <summary>
