@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
@@ -24,9 +25,12 @@ namespace EarthToRhino.Components
         {
             pManager.AddIntegerParameter("Level of Detail", "D", "The level of detail", GH_ParamAccess.item);
             pManager.AddRectangleParameter("Boundary", "B", "The boundary of the area to download", GH_ParamAccess.item);
-            pManager.AddTextParameter("Source", "S", "The source of the tiles", GH_ParamAccess.item);
             pManager.AddTextParameter("Temp Folder", "F", "The temporary folder to store the tiles", GH_ParamAccess.item);
             pManager.AddTextParameter("API Key", "K", "The API key", GH_ParamAccess.item);
+
+            pManager[0].Optional = true;
+            pManager[1].Optional = true;
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -34,6 +38,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
+
         }
 
         /// <summary>
@@ -42,6 +47,27 @@ namespace EarthToRhino.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            int levelOfDetail = 0;
+            Rectangle3d boundary = new Rectangle3d();
+            string tempFolder = "";
+            string apiKey = "";
+
+            DA.GetData(0, ref levelOfDetail);
+            DA.GetData(1, ref boundary);
+            DA.GetData(2, ref tempFolder);
+            DA.GetData(3, ref apiKey);
+            
+
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "API Key is missing");
+                return;
+            }
+
+            WebAPI.SetApiKey(apiKey);
+
+            TileHandler tileHandler = new TileHandler();
+            tileHandler.GetRoot();
         }
 
         /// <summary>
