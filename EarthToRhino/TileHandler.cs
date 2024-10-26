@@ -1,8 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace EarthToRhino
 {
@@ -13,14 +17,44 @@ namespace EarthToRhino
 
         }
 
-        public void DownloadTiles()
+        public TileClusterDTO GetTileCluster(string partialUri)
         {
+            // Check if the partialUri has the session
+            Uri uri = new Uri(RoutesController.GetFullUri(partialUri));
+            NameValueCollection session = HttpUtility.ParseQueryString(uri.Query);
+            if (session["session"] != null)
+            {
+                WebAPI.SetSession(session["session"]);
+            }
 
+            string rootObject = WebAPI.GetFromPartialUri(partialUri);
+
+            TileClusterDTO data = JsonConvert.DeserializeObject<TileClusterDTO>(rootObject);
+
+            return data;
         }
 
-        public void GetRoot()
+        public bool TrySaveChild(ChildDTO child)
         {
-            string rootObject = WebAPI.Get(RoutesController.Root, true);
+            if (child.Content == null)
+            {
+                return false;
+            }
+
+            string uri = child.Content.Uri;
+            //string filename = uri.Split('/').Last();
+
+            string filename = Guid.NewGuid().ToString() + ".glb";
+
+            if (string.IsNullOrEmpty(uri) || !uri.EndsWith(".glb"))
+            {
+                return false;
+            }
+
+            string fullpath = Path.Combine(PathController.TempFolder, filename);
+            return WebAPI.DownloadGLB(uri, fullpath);
         }
+
+        
     }
 }

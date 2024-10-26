@@ -1,5 +1,6 @@
-using Grasshopper;
+﻿using Grasshopper;
 using Grasshopper.Kernel;
+using Rhino.DocObjects;
 using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
@@ -27,9 +28,11 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddPointParameter("Point of Interest", "POI", "The point of interest", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Lattitude", "LAT", "The lattitude of the anchor point", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Longitude", "LON", "The longitude of the anchor point", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Set", "set", "Set the EarthAnchorPoint", GH_ParamAccess.item, false);
+            pManager.AddPointParameter("Model Base Point", "MBP", "The point in rhino to set earth anchor", GH_ParamAccess.item);
+            pManager[1].Optional = true;
+            pManager.AddTextParameter("Latitude", "LAT", "The latitude of the anchor point", GH_ParamAccess.item);
+            pManager.AddTextParameter("Longitude", "LON", "The longitude of the anchor point", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -38,6 +41,8 @@ namespace EarthToRhino.Components
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddPointParameter("Anchor Point", "AP", "The anchor point", GH_ParamAccess.item);
+            pManager.AddTextParameter("Earth Anchor Point", "EAP", "EarthAnchorPoint Longitude/Latitude", GH_ParamAccess.item);
+
         }
 
         /// <summary>
@@ -47,7 +52,82 @@ namespace EarthToRhino.Components
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            string latString = string.Empty;
+            string lonString = string.Empty;
+            double lat = Double.NaN;
+            double lon = Double.NaN;
+            bool EAP = false;
+            Point3d basePoint = new Point3d();
+            string lonlatString = string.Empty;
+
+            DA.GetData<bool>(0, ref EAP);
+            DA.GetData<Point3d>(1, ref basePoint);
+            DA.GetData<string>(2, ref latString);
+            DA.GetData<string>(3, ref lonString);
+
+            if (EAP == true)
+            {
+                EarthAnchorPoint ePt = new EarthAnchorPoint();
+
+                
+
+                lat = Utilities.DMStoDDLat(latString);
+                lon = Utilities.DMStoDDLon(lonString);
+
+                if (Double.IsNaN(lat) && !string.IsNullOrEmpty(latString))
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Latitude value is invalid. Please enter value in valid Decimal Degree format (-79.976666) " +
+                        "or valid Degree Minute Second format (79°58′36″W | 079:56:55W | 079d 58′ 36″ W | 079 58 36.0 | 079 58 36.4 E)");
+                    return;
+                }
+
+                if (Double.IsNaN(lon) && !string.IsNullOrEmpty(lonString))
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Longitude value is invalid. Please enter value in valid Decimal Degree format (40.446388) " +
+                        "or valid Degree Minute Second format (40°26′47″N | 40:26:46N | 40d 26m 47s N | 40 26 47.1 | 40 26 47.4141 N)");
+                    return;
+                }
+
+                else
+                {
+                    if (!Double.IsNaN(lat) && !Double.IsNaN(lon))
+                    {
+                        ePt.EarthBasepointLatitude = lat;
+                        ePt.EarthBasepointLongitude = lon;
+                        ePt.ModelBasePoint = basePoint;
+                        ePt.Description = "user defined earth anchor point";
+                    }
+                }
+
+                if ((ePt.EarthBasepointLatitude > -90) && (ePt.EarthBasepointLatitude < 90) && (ePt.EarthBasepointLongitude > -180) && (ePt.EarthBasepointLongitude < 180))
+                {
+                    //set new EAP
+                    Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint = ePt;
+                }
+
+            }
+
+            //check if EAP has been set and if so what is it
+            if (!Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint.EarthLocationIsSet())
+            {
+                lonlatString = "The Earth Anchor Point has not been set yet";
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "EAP has not been set yet");
+            }
+
+            else lonlatString = "Longitude: " + Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint.EarthBasepointLongitude.ToString() +
+                " / Latitude: " + Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint.EarthBasepointLatitude.ToString();
+
+            DA.SetData("Earth Anchor Point", lonlatString);
         }
+
+        /// <summary>
+        /// Override the Help Description so we can make a link to the Google Terms of Use and Privaty Policy
+        /// </summary>
+        protected override string HelpDescription =>
+            base.Description + "<br>" +
+            "This component utilizes the Google Map Tiles API.<br>" +
+            "By using this application you are bound to their <a href=\"https://cloud.google.com/maps-platform/terms/\">Terms of Use</a> <br>" +
+            "and their <a href=\"https://policies.google.com/privacy\">Privacy Policy</a>.";
 
         /// <summary>
         /// Provides an Icon for every component that will be visible in the User Interface.

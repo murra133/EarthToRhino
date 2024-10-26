@@ -156,6 +156,15 @@ namespace EarthToRhino.Components
         }
 
         /// <summary>
+        /// Override the Help Description so we can make a link to the Google Terms of Use and Privaty Policy
+        /// </summary>
+        protected override string HelpDescription =>
+            base.Description + "<br>" +
+            "This component utilizes the Google Map Tiles API.<br>" +
+            "By using this application you are bound to their <a href=\"https://cloud.google.com/maps-platform/terms/\">Terms of Use</a> <br>" +
+            "and their <a href=\"https://policies.google.com/privacy\">Privacy Policy</a>.";
+
+        /// <summary>
         /// Provides an Icon for the component.
         /// </summary>
         protected override System.Drawing.Bitmap Icon

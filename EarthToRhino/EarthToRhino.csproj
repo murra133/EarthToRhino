@@ -24,6 +24,7 @@
   
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   
   <!-- For Windows only builds -->
@@ -44,6 +45,7 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
 		<Reference Include="System.Net.Http" />
+		<Reference Include="System.Web"/>
 	</ItemGroup>
 
 	<ItemGroup>

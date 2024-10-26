@@ -30,8 +30,16 @@ namespace EarthToRhino.Components
 
             pManager[0].Optional = true;
             pManager[1].Optional = true;
-            pManager[2].Optional = true;
         }
+
+        /// <summary>
+        /// Override the Help Description so we can make a link to the Google Terms of Use and Privaty Policy
+        /// </summary>
+        protected override string HelpDescription =>
+            base.Description + "<br>" +
+            "This component utilizes the Google Map Tiles API.<br>" +
+            "By using this application you are bound to their <a href=\"https://cloud.google.com/maps-platform/terms/\">Terms of Use</a> <br>" +
+            "and their <a href=\"https://policies.google.com/privacy\">Privacy Policy</a>.";
 
         /// <summary>
         /// Registers all the output parameters for this component.
@@ -64,10 +72,36 @@ namespace EarthToRhino.Components
                 return;
             }
 
+            if (string.IsNullOrEmpty(tempFolder))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Temp Folder is missing");
+                return;
+            }
+
+            PathController.SetTempFolder(tempFolder);
+
             WebAPI.SetApiKey(apiKey);
 
             TileHandler tileHandler = new TileHandler();
-            tileHandler.GetRoot();
+
+            TileClusterDTO rootCluster = tileHandler.GetTileCluster(RoutesController.Root);
+
+            foreach (ChildDTO child in rootCluster.Root.Children)
+            {
+                foreach (ChildDTO grandChild in child.Children)
+                {
+                    TileClusterDTO firstLayer = tileHandler.GetTileCluster(grandChild.Content.Uri);
+
+                    foreach (ChildDTO firstLayerChild in firstLayer.Root.Children)
+                    {
+                        foreach (ChildDTO firstLayerGrandchild in firstLayerChild.Children)
+                        {
+                            tileHandler.TrySaveChild(firstLayerGrandchild);
+                        }
+                        
+                    }
+                }
+            }
         }
 
         /// <summary>
