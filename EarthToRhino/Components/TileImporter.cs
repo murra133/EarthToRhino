@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
@@ -22,6 +25,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
+            pManager.AddTextParameter("Folder Path", "TP", "Folder Path to the tile", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -29,6 +33,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
+            pManager.AddTextParameter("All Files", "FP", "Lists all Files", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -37,6 +42,28 @@ namespace EarthToRhino.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            string folderPath = "";
+            if (!DA.GetData(0, ref folderPath)) return;
+
+            List<string> allFiles = getAllFiles(folderPath);
+            DA.SetDataList(0, allFiles);
+
+        }
+
+
+        private List<string> getAllFiles(string folderPath)
+        {
+            List<string> allFiles = new List<string>();
+            DirectoryInfo d = new DirectoryInfo(folderPath); //Assuming Test is your Folder
+
+            FileInfo[] Files = d.GetFiles("*.glb"); //Getting Text files
+
+            foreach (FileInfo file in Files)
+            {
+                Debug.WriteLine(file.Name);
+                allFiles.Add(file.Name);
+            }
+            return allFiles;
         }
 
         /// <summary>
