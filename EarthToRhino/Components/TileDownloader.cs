@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using System.Drawing;
 
 namespace EarthToRhino.Components
 {
@@ -113,8 +115,15 @@ namespace EarthToRhino.Components
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return null;
+                return getMap();
             }
+        }
+
+        private Bitmap getMap()
+        {
+            MemoryStream stream_ = new MemoryStream(Properties.Resources.artboard_2);
+            Bitmap bitmap = new Bitmap(stream_);
+            return bitmap;
         }
 
         /// <summary>

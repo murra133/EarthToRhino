@@ -4,6 +4,8 @@ using Rhino.DocObjects;
 using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 
 namespace EarthToRhino.Components
 {
@@ -135,7 +137,26 @@ namespace EarthToRhino.Components
         /// You can add image files to your project resources and access them like this:
         /// return Resources.IconForThisComponent;
         /// </summary>
-        protected override System.Drawing.Bitmap Icon => null;
+        /// <summary>
+        /// Provides an Icon for the component.
+        /// </summary>
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                //You can add image files to your project resources and access them like this:
+                // return Resources.IconForThisComponent;
+                return getMap();
+            }
+        }
+
+        private Bitmap getMap()
+        {
+            MemoryStream stream_ = new MemoryStream(Properties.Resources.artboard_1);
+            Bitmap bitmap = new Bitmap(stream_);
+            return bitmap;
+        }
+
 
         /// <summary>
         /// Each component must have a unique Guid to identify it. 

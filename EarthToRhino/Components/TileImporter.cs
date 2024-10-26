@@ -12,6 +12,7 @@ using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
+using System.Drawing;
 
 namespace EarthToRhino.Components
 {
@@ -173,8 +174,15 @@ namespace EarthToRhino.Components
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return Resources.
+                return getMap();
             }
+        }
+
+        private Bitmap getMap()
+        {
+            MemoryStream stream_ = new MemoryStream(Properties.Resources.artboard_3);
+            Bitmap bitmap = new Bitmap(stream_);
+            return bitmap;
         }
 
         /// <summary>
