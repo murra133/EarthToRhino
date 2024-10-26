@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.Versioning;
+using EarthToRhino.Properties;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
+using Rhino.Render;
 
 namespace EarthToRhino.Components
 {
@@ -42,6 +47,7 @@ namespace EarthToRhino.Components
         {
             pManager.AddTextParameter("All Files", "FP", "Lists all Files", GH_ParamAccess.list);
             pManager.AddMeshParameter("Mesh","M","Meshes",GH_ParamAccess.list);
+            pManager.AddGenericParameter("Material", "M2", "Material", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -52,6 +58,7 @@ namespace EarthToRhino.Components
         {
             string folderPath = "";
             List<Mesh> meshList = new List<Mesh>();
+            List<GH_Material> materialList = new List<GH_Material>();
             if (!DA.GetData(0, ref folderPath)) return;
 
             List<string> allFiles = getAllFiles(folderPath);
@@ -64,12 +71,30 @@ namespace EarthToRhino.Components
 
             foreach (RhinoObject obj in doc.Objects)
             {
+                
                 if (obj == null) continue;
+                Mesh[] m = obj.GetMeshes(MeshType.Render);
                 try
                 {
                     if (obj.Geometry is GeometryBase geom)
                     {
-                        meshList.Add((Mesh)geom); // Add geometry to the list
+                        switch (geom.ObjectType)
+                        {
+                            case ObjectType.Mesh:
+                                Mesh mesh = (Mesh)geom;
+                                mesh.Normals.ComputeNormals();
+                                meshList.Add(mesh);
+                                RenderMaterial renderMaterial = obj.RenderMaterial;
+                                if (renderMaterial != null)
+                                {
+                                    // Create a new material with texture information
+                                    materialList.Add(new GH_Material(renderMaterial));
+                                    
+                                }
+                                break;
+                            default:
+                                break;
+                            }                        
                     }
 
                 }
@@ -80,8 +105,10 @@ namespace EarthToRhino.Components
                 }
             }
 
+            doc.Objects.Clear();
             DA.SetDataList(0, allFiles);
             DA.SetDataList(1, meshList);
+            DA.SetDataList(2, materialList);
 
         }
 
@@ -95,7 +122,6 @@ namespace EarthToRhino.Components
 
             foreach (FileInfo file in Files)
             {
-                Debug.WriteLine(file.Name);
                 allFiles.Add(file.Name);
                 importFile(folderPath + "\\" + file.Name);
 
@@ -106,7 +132,6 @@ namespace EarthToRhino.Components
 
         private bool importFile(string filePath)
         {
-            Debug.WriteLine(filePath);
             // Check if the file path is valid
             if (string.IsNullOrEmpty(filePath))
             {
@@ -115,13 +140,12 @@ namespace EarthToRhino.Components
             }
 
             // Try importing the file into the active document
-            var success = doc.Import(filePath);
+            //var success = doc.Import(filePath);
+            var c = doc.Import(filePath);
 
             // Output the result of the import operation
-            if (success)
+            if (c)
             {
-                RhinoApp.WriteLine("File imported successfully.");
-
                 return true;
             }
             else
@@ -140,7 +164,7 @@ namespace EarthToRhino.Components
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return null;
+                return Resources.
             }
         }
 
