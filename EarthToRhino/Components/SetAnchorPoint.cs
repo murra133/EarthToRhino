@@ -73,8 +73,8 @@ namespace EarthToRhino.Components
 
                 
 
-                lat = Utilities.DMStoDDLat(latString);
-                lon = Utilities.DMStoDDLon(lonString);
+                lat = GeoHelper.DMStoDDLat(latString);
+                lon = GeoHelper.DMStoDDLon(lonString);
 
                 if (Double.IsNaN(lat) && !string.IsNullOrEmpty(latString))
                 {
