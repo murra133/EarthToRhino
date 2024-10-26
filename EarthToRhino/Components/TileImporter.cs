@@ -14,11 +14,16 @@ namespace EarthToRhino.Components
         /// <summary>
         /// Initializes a new instance of the TileImporter class.
         /// </summary>
+        /// 
+
+        RhinoDoc doc;
         public TileImporter()
           : base("Tile Importer", "TI",
               "Loads Tile into View of Rhino",
               Utilities.CATEGORY_NAME, Utilities.SUBCATEGORY_NAME)
         {
+            doc = RhinoDoc.CreateHeadless(null);
+            doc.ModelUnitSystem = UnitSystem.Meters;
         }
 
         /// <summary>
@@ -35,6 +40,7 @@ namespace EarthToRhino.Components
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("All Files", "FP", "Lists all Files", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Mesh","M","Meshes",GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -44,6 +50,7 @@ namespace EarthToRhino.Components
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             string folderPath = "";
+            List<Mesh> meshList = new List<Mesh>();
             if (!DA.GetData(0, ref folderPath)) return;
 
             List<string> allFiles = getAllFiles(folderPath);
@@ -54,7 +61,22 @@ namespace EarthToRhino.Components
                 return;
             }
 
+            //foreach (RhinoDoc.Objects obj in doc.Objects) { 
+            //    if(obj == null) continue;
+            //    try
+            //    {
+            //        meshList.Add(obj.Geometry);
+
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Debug.WriteLine(e);
+
+            //    }
+            //}
+
             DA.SetDataList(0, allFiles);
+            DA.SetDataList(1, meshList);
 
         }
 
@@ -70,9 +92,10 @@ namespace EarthToRhino.Components
             {
                 Debug.WriteLine(file.Name);
                 allFiles.Add(file.Name);
+                importFile(folderPath + "\\" + file.Name);
+
             }
 
-            importFile(folderPath + "\\" + allFiles[0]);
             return allFiles;
         }
 
@@ -87,7 +110,7 @@ namespace EarthToRhino.Components
             }
 
             // Try importing the file into the active document
-            var success = RhinoDoc.ActiveDoc.Import(filePath);
+            var success = doc.Import(filePath);
 
             // Output the result of the import operation
             if (success)
