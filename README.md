@@ -18,7 +18,7 @@
 
 ## Licensing
 
-Distributed under the MIT license. See `License.md`for more information.
+Distributed under the MIT license. See `LICENSE`for more information.
 
 ## Acknowledgements
 
