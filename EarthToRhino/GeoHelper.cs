@@ -168,6 +168,18 @@ namespace EarthToRhino
             return true;
         }
 
+        public class Tile
+        {
+            public BoundingVolume BoundingVolume { get; set; }
+            public List<Tile> Children { get; set; }
+            public string ContentUri { get; set; }
+            // Other properties as needed
+        }
 
+        public class BoundingVolume
+        {
+            public Vector3 Center { get; set; }
+            public Vector3[] HalfAxes { get; set; }
+        }
     }
 }
