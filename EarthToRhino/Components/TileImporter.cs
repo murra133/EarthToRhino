@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Grasshopper.Kernel;
+using Rhino;
 using Rhino.Geometry;
 
 namespace EarthToRhino.Components
@@ -46,6 +47,11 @@ namespace EarthToRhino.Components
             if (!DA.GetData(0, ref folderPath)) return;
 
             List<string> allFiles = getAllFiles(folderPath);
+            
+            //foreach (string file in allFiles)
+            //{
+            //    RhinoDoc.Import(file);
+            //}
             DA.SetDataList(0, allFiles);
 
         }
@@ -63,7 +69,36 @@ namespace EarthToRhino.Components
                 Debug.WriteLine(file.Name);
                 allFiles.Add(file.Name);
             }
+
+            importFile(folderPath + "\\" + allFiles[0]);
             return allFiles;
+        }
+
+        private bool importFile(string filePath)
+        {
+            Debug.WriteLine(filePath);
+            // Check if the file path is valid
+            if (string.IsNullOrEmpty(filePath))
+            {
+                RhinoApp.WriteLine("Invalid file path. Please provide a valid path.");
+                return false;
+            }
+
+            // Try importing the file into the active document
+            var success = RhinoDoc.ActiveDoc.Import(filePath);
+
+            // Output the result of the import operation
+            if (success)
+            {
+                RhinoApp.WriteLine("File imported successfully.");
+
+                return true;
+            }
+            else
+            {
+                RhinoApp.WriteLine("File import failed.");
+                return true; // Output false if the import failed
+            }
         }
 
         /// <summary>
