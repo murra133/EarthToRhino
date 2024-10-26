@@ -1,7 +1,9 @@
-# EarthToRhino 🌍🦏
----
+# EarthToRhino
 
 ![Rhino Spacesuit](/Assets/Rhino%20Spacesuit_Short.gif)
+
+## What is Earth To Rhino
+EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗.
 
 # Team members 👨‍🚀👩‍🚀
 - Paris Nikitidis
@@ -23,3 +25,5 @@ Please check out other hackathon projects and future hackathon events 👩‍�
 ## Licensing 🔑
 
 Distributed under the MIT license. See `LICENSE` for more information.
+
+![Floating in Space](/Assets/Floating_in_Space.gif)
