@@ -72,12 +72,17 @@ namespace EarthToRhino.Components
             GH_Rectangle rect = null;
             string outputDir = "";
 
-            if (!DA.GetData(0, ref apiKey) || !DA.GetData(1, ref rect) || !DA.GetData(2, ref outputDir))
+            //bool a = DA.GetData(3, ref apiKey);
+            //bool b = DA.GetData(1, ref rect);
+            //bool c = DA.GetData(2, ref outputDir);
+
+            if (!DA.GetData(3, ref apiKey) || !DA.GetData(1, ref rect) || !DA.GetData(2, ref outputDir))
                 return;
 
             // Construct the Google Maps API URL
-            //string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={rect.CenterPoint.X},{rect.CenterPoint.Y}&key={apiKey}";
-            string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={0},{0}&key={apiKey}";
+            //double x=0.0, y=0.0; 
+            string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={rect.Boundingbox.Center.X},{rect.Boundingbox.Center.Y}&key={apiKey}";
+            //string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={x},{y}&key={apiKey}";
             // Download the JSON response
             using (WebClient client = new WebClient())
             {
