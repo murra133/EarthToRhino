@@ -1,9 +1,9 @@
-# EarthToRhino
+# EarthToRhino 🌍🦏
 ---
 
 ![Rhino Spacesuit](/Assets/Rhino%20Spacesuit_Short.gif)
 
-# Team members
+# Team members 👨‍🚀👩‍🚀
 - Paris Nikitidis
 - Sergey Pigach
 - Alfredo Chavez
@@ -15,12 +15,11 @@
 - Nico Azel
 - Jason Yang
 
-
-## Licensing
-
-Distributed under the MIT license. See `LICENSE`for more information.
-
-## Acknowledgements
+## Acknowledgements 🙌
 
 A huge thanks to AEC Tech 2024 for arranging and hosting this event.
-Please check out other hackathon projects and future hackathon events hosted by [AECTech](https://www.aectech.us/).
+Please check out other hackathon projects and future hackathon events 👩‍💻 hosted by [AECTech](https://www.aectech.us/).
+
+## Licensing 🔑
+
+Distributed under the MIT license. See `LICENSE` for more information.
