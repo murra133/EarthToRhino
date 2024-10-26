@@ -42,14 +42,16 @@ namespace EarthToRhino
             }
 
             string uri = child.Content.Uri;
-            //string filename = uri.Split('/').Last();
 
-            string filename = Guid.NewGuid().ToString() + ".glb";
+            
 
             if (string.IsNullOrEmpty(uri) || !uri.EndsWith(".glb"))
             {
                 return false;
             }
+
+            string filename = Utilities.GenerateHash(uri.Split('/').Last()) + ".glb";
+            //string filename = Guid.NewGuid().ToString() + ".glb";
 
             string fullpath = Path.Combine(PathController.TempFolder, filename);
             return WebAPI.DownloadGLB(uri, fullpath);

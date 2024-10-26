@@ -33,12 +33,15 @@ namespace EarthToRhino
             try
             {
                 string finalUri = RoutesController.GetFullUri(partialUri);
+                finalUri += $"?key={ApiKey}&session={Session}";
 
                 HttpResponseMessage response = client.GetAsync(finalUri).Result;
 
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                var byteArray = response.Content.ReadAsByteArrayAsync().Result.ToArray();
+
+                using (BinaryWriter writer = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
                 {
-                    response.Content.CopyToAsync(fileStream).Wait();
+                    writer.Write(byteArray);
                 }
 
                 return true;
