@@ -15,7 +15,7 @@ namespace EarthToRhino.Components
         /// </summary>
         public TileImporter()
           : base("Tile Importer", "TI",
-              "Description",
+              "Loads Tile into View of Rhino",
               Utilities.CATEGORY_NAME, Utilities.SUBCATEGORY_NAME)
         {
         }
@@ -46,6 +46,13 @@ namespace EarthToRhino.Components
             if (!DA.GetData(0, ref folderPath)) return;
 
             List<string> allFiles = getAllFiles(folderPath);
+
+            if (allFiles.Count == 0)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No files found in the folder");
+                return;
+            }
+
             DA.SetDataList(0, allFiles);
 
         }
