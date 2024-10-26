@@ -30,7 +30,6 @@ namespace EarthToRhino.Components
 
             pManager[0].Optional = true;
             pManager[1].Optional = true;
-            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -64,10 +63,36 @@ namespace EarthToRhino.Components
                 return;
             }
 
+            if (string.IsNullOrEmpty(tempFolder))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Temp Folder is missing");
+                return;
+            }
+
+            PathController.SetTempFolder(tempFolder);
+
             WebAPI.SetApiKey(apiKey);
 
             TileHandler tileHandler = new TileHandler();
-            tileHandler.GetRoot();
+
+            TileClusterDTO rootCluster = tileHandler.GetTileCluster(RoutesController.Root);
+
+            foreach (ChildDTO child in rootCluster.Root.Children)
+            {
+                foreach (ChildDTO grandChild in child.Children)
+                {
+                    TileClusterDTO firstLayer = tileHandler.GetTileCluster(grandChild.Content.Uri);
+
+                    foreach (ChildDTO firstLayerChild in firstLayer.Root.Children)
+                    {
+                        foreach (ChildDTO firstLayerGrandchild in firstLayerChild.Children)
+                        {
+                            tileHandler.TrySaveChild(firstLayerGrandchild);
+                        }
+                        
+                    }
+                }
+            }
         }
 
         /// <summary>
