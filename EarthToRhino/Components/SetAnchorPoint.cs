@@ -42,7 +42,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddPointParameter("Anchor Point", "AP", "The anchor point", GH_ParamAccess.item);
+            pManager.AddPointParameter("Base Point", "BP", "The anchor point", GH_ParamAccess.item);
             pManager.AddTextParameter("Earth Anchor Point", "EAP", "EarthAnchorPoint Longitude/Latitude", GH_ParamAccess.item);
 
         }
@@ -119,7 +119,9 @@ namespace EarthToRhino.Components
             else lonlatString = "Longitude: " + Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint.EarthBasepointLongitude.ToString() +
                 " / Latitude: " + Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint.EarthBasepointLatitude.ToString();
 
-            DA.SetData("Earth Anchor Point", lonlatString);
+
+            DA.SetData(0, basePoint);
+            DA.SetData(1, lonlatString);
         }
 
         /// <summary>
