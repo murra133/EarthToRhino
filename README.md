@@ -18,7 +18,7 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 - Jason Yang
 
 ## Architecture
-
+![Architecture](/Assets/ArchitectureAsset.png)
 
 ## Prerquisites
 - Rhino 8
@@ -32,7 +32,6 @@ $ git clone https://github.com/murra133/EarthToRhino.git
 ```
 2. Open Solution in Visual Studio
 3. Build Solution to create "Earth To Rhino" Components
-4. 
 
 
 ## Acknowledgements 🙌
