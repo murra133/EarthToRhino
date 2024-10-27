@@ -9,6 +9,8 @@ using Rhino;
 using System.Diagnostics;
 using Rhino.UI;
 using Rhino.DocObjects;
+using EarthToRhino.Properties;
+using System.IO;
 
 namespace EarthToRhino.Components
 {
@@ -118,7 +120,7 @@ namespace EarthToRhino.Components
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return null;
+                return Resources.Artboard_4;
             }
         }
 

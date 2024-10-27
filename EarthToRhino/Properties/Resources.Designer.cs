@@ -89,5 +89,15 @@ namespace EarthToRhino.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Artboard_4 {
+            get {
+                object obj = ResourceManager.GetObject("Artboard_4", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
