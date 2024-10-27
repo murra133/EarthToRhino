@@ -1,4 +1,5 @@
-﻿using Rhino.FileIO;
+﻿using Newtonsoft.Json;
+using Rhino.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -101,6 +102,11 @@ namespace EarthToRhino
 
             HttpResponseMessage response = client.GetAsync(finalUrl).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
+
+            ResponseBodyDTO responseBodyDTO = JsonConvert.DeserializeObject<ResponseBodyDTO>(responseBody);
+
+            if (!response.IsSuccessStatusCode) throw new Exception(responseBodyDTO.Error.Message);
+
 
             return responseBody;
 
