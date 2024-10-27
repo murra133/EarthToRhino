@@ -13,12 +13,14 @@ namespace EarthToRhino
 {
     public class TileHandler
     {
+        public Rectangle3d Boundary { get; private set; }
         public int MaxRecursionDepth { get; private set; }
 
         public List<ChildDTO> ChildrenToDownload { get; private set; }
-        public TileHandler()
+        public TileHandler( Rectangle3d boundary)
         {
             ChildrenToDownload = new List<ChildDTO>();
+            Boundary = boundary;
         }
 
         public void SetRecursionDepth(int depth)
@@ -128,6 +130,9 @@ namespace EarthToRhino
             // 1. Contains the child tile
             // 2. Is contained by the child
             // 3. Intersects the child
+
+            // Check if the tile intersects with the boundary
+            bool isInBoundary = GeoHelper.IsTileInBoundary(boundary, dto);
 
             return true;
         }
