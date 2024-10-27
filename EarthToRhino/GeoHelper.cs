@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Rhino;
+using Rhino.DocObjects;
 using Rhino.Geometry;
 using Plane = Rhino.Geometry.Plane;
-
 namespace EarthToRhino
 {
     internal class GeoHelper
@@ -129,15 +129,11 @@ namespace EarthToRhino
         {
             var activeDoc = Rhino.RhinoDoc.ActiveDoc;
 
-            var earthAchor = activeDoc.EarthAnchorPoint;
+            var earthAnchor = activeDoc.EarthAnchorPoint;
 
-            var lat = earthAchor.EarthBasepointLatitude;
-            var lon = earthAchor.EarthBasepointLongitude;
-
-            var transform = earthAchor.GetModelToEarthTransform(activeDoc.ModelUnitSystem);
+            var transform = earthAnchor.GetModelToEarthTransform(activeDoc.ModelUnitSystem);
             return transform;
         }
-
 
         public static bool IsPointInsideOBB(Vector3 point, Vector3 center, Vector3[] halfAxes)
         {
@@ -219,6 +215,152 @@ namespace EarthToRhino
                        Math.Abs(dz) <= HalfExtents.Z;
             }
         }
+
+        public static bool IsTileInBoundary(Rectangle3d boundary, BoundingVolumeDTO bbox)
+        {
+            // Get the EarthAnchorPoint from the active Rhino document
+            EarthAnchorPoint earthAnchor = Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint;
+
+            // Get the model to earth transformation
+            Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
+
+            // Convert boundary rectangle to ECEF and create AABB
+            Point3d[] rectangleCorners = new Point3d[4];
+            for (int i = 0; i < 4; i++)
+            {
+                rectangleCorners[i] = boundary.Corner(i);
+            }
+
+            List<Point3d> rectangleCornersECEF = new List<Point3d>();
+
+            foreach (Point3d corner in rectangleCorners)
+            {
+                // Transform the corner to Earth coordinates
+                Point3d earthCorner = corner;
+                earthCorner.Transform(modelToEarth);
+
+                double cornerLatitude = earthCorner.Y;   // Latitude in degrees
+                double cornerLongitude = earthCorner.X;  // Longitude in degrees
+                double cornerAltitude = earthCorner.Z;   // Altitude in meters
+
+                // Convert to ECEF coordinates
+                Vector3d cornerECEF = LatLonToECEF(cornerLatitude, cornerLongitude, cornerAltitude);
+                rectangleCornersECEF.Add(new Point3d(cornerECEF.X, cornerECEF.Y, cornerECEF.Z));
+            }
+
+            // Create an AABB from the rectangle corners
+            BoundingBox queryAABB = new BoundingBox(rectangleCornersECEF);
+
+            // Parse the bounding volume to create an OrientedBoundingBox
+            Vector3d center = new Vector3d(bbox.Box[0], bbox.Box[1], bbox.Box[2]);
+            Vector3d halfAxisX = new Vector3d(bbox.Box[3], bbox.Box[4], bbox.Box[5]);
+            Vector3d halfAxisY = new Vector3d(bbox.Box[6], bbox.Box[7], bbox.Box[8]);
+            Vector3d halfAxisZ = new Vector3d(bbox.Box[9], bbox.Box[10], bbox.Box[11]);
+
+            // Compute the extents (lengths) of the half-axes
+            double extentX = halfAxisX.Length;
+            double extentY = halfAxisY.Length;
+            double extentZ = halfAxisZ.Length;
+
+            // Normalize the half-axes to get the orientation axes
+            Vector3d axisX = halfAxisX / extentX;
+            Vector3d axisY = halfAxisY / extentY;
+            Vector3d axisZ = halfAxisZ / extentZ;
+
+            // Build the rotation matrix
+            Transform rotation = Transform.Identity;
+            rotation.M00 = axisX.X; rotation.M01 = axisY.X; rotation.M02 = axisZ.X;
+            rotation.M10 = axisX.Y; rotation.M11 = axisY.Y; rotation.M12 = axisZ.Y;
+            rotation.M20 = axisX.Z; rotation.M21 = axisY.Z; rotation.M22 = axisZ.Z;
+
+            // Create the OrientedBoundingBox
+            Vector3d halfExtents = new Vector3d(extentX, extentY, extentZ);
+            Point3d obbCenter = new Point3d(center.X, center.Y, center.Z);
+            OrientedBoundingBox obb = new OrientedBoundingBox(obbCenter, halfExtents, rotation);
+
+            // Perform the intersection test using SAT
+            bool intersects = OBBIntersectsAABB(obb, queryAABB);
+
+            return intersects;
+        }
+
+        public static bool OBBIntersectsAABB(OrientedBoundingBox obb, BoundingBox aabb)
+        {
+            // Get the center and half-extents of the AABB
+            Point3d aabbCenter = 0.5 * (aabb.Min + aabb.Max);
+            Vector3d aabbHalfExtents = 0.5 * (aabb.Max - aabb.Min);
+
+            // Compute rotation matrix expressing OBB in AABB coordinate frame
+            Vector3d[] obbAxes = new Vector3d[3];
+            obbAxes[0] = new Vector3d(obb.Rotation.M00, obb.Rotation.M10, obb.Rotation.M20);
+            obbAxes[1] = new Vector3d(obb.Rotation.M01, obb.Rotation.M11, obb.Rotation.M21);
+            obbAxes[2] = new Vector3d(obb.Rotation.M02, obb.Rotation.M12, obb.Rotation.M22);
+
+            // AABB axes
+            Vector3d[] aabbAxes = { Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis };
+
+            // Translation vector from AABB center to OBB center
+            Vector3d t = obb.Center - aabbCenter;
+
+            // Project t onto AABB axes
+            double[] tAABB = { t * aabbAxes[0], t * aabbAxes[1], t * aabbAxes[2] };
+
+            double[,] R = new double[3, 3];
+            double[,] AbsR = new double[3, 3];
+            double EPSILON = 1e-6;
+
+            // Compute rotation matrix and its absolute value
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    R[i, j] = obbAxes[i] * aabbAxes[j];
+                    AbsR[i, j] = Math.Abs(R[i, j]) + EPSILON;
+                }
+            }
+
+            // Test axes L = AABB axis
+            for (int i = 0; i < 3; i++)
+            {
+                double ra = obb.HalfExtents.X * AbsR[0, i] + obb.HalfExtents.Y * AbsR[1, i] + obb.HalfExtents.Z * AbsR[2, i];
+                double rb = aabbHalfExtents[i];
+                if (Math.Abs(tAABB[i]) > ra + rb)
+                {
+                    return false;
+                }
+            }
+
+            // Test axes L = OBB axis
+            for (int i = 0; i < 3; i++)
+            {
+                double ra = obb.HalfExtents[i];
+                double rb = aabbHalfExtents.X * AbsR[i, 0] + aabbHalfExtents.Y * AbsR[i, 1] + aabbHalfExtents.Z * AbsR[i, 2];
+                double tOBB = t * obbAxes[i];
+                if (Math.Abs(tOBB) > ra + rb)
+                {
+                    return false;
+                }
+            }
+
+            // Test axis L = AABB axis[i] x OBB axis[j]
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    double ra = obb.HalfExtents[(i + 1) % 3] * AbsR[(i + 2) % 3, j] + obb.HalfExtents[(i + 2) % 3] * AbsR[(i + 1) % 3, j];
+                    double rb = aabbHalfExtents[(j + 1) % 3] * AbsR[i, (j + 2) % 3] + aabbHalfExtents[(j + 2) % 3] * AbsR[i, (j + 1) % 3];
+                    double tCross = Math.Abs(t[(i + 2) % 3] * R[(i + 1) % 3, j] - t[(i + 1) % 3] * R[(i + 2) % 3, j]);
+                    if (tCross > ra + rb)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // No separating axis found; boxes intersect
+            return true;
+        }
+
         public static bool BoundingBoxesIntersect(BoundingBox bb1, BoundingBox bb2)
         {
             return !(bb1.Max.X < bb2.Min.X || bb1.Min.X > bb2.Max.X ||
@@ -226,23 +368,27 @@ namespace EarthToRhino
                      bb1.Max.Z < bb2.Min.Z || bb1.Min.Z > bb2.Max.Z);
         }
 
-        public static bool OBBIntersectsAABB(OrientedBoundingBox obb, BoundingBox aabb)
+        public static Point3d ModelPointToECEF(Point3d modelPoint)
         {
-            // Convert the OBB to a Box
-            Rhino.Geometry.Plane plane = new Rhino.Geometry.Plane(obb.Center,
-                new Vector3d(obb.Rotation.M00, obb.Rotation.M10, obb.Rotation.M20),
-                new Vector3d(obb.Rotation.M01, obb.Rotation.M11, obb.Rotation.M21));
+            // Get the EarthAnchorPoint from the active Rhino document
+            EarthAnchorPoint earthAnchor = Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint;
 
-            Box obbBox = new Box(plane,
-                new Interval(-obb.HalfExtents.X, obb.HalfExtents.X),
-                new Interval(-obb.HalfExtents.Y, obb.HalfExtents.Y),
-                new Interval(-obb.HalfExtents.Z, obb.HalfExtents.Z));
+            // Get the model to earth transformation
+            Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
 
-            // Get the bounding box of the OBB
-            BoundingBox obbBoundingBox = obbBox.BoundingBox;
+            // Transform the point to Earth coordinates (latitude, longitude, altitude)
+            Point3d earthPoint = modelPoint;
+            earthPoint.Transform(modelToEarth);
 
-            // Use the custom method to test intersection
-            return BoundingBoxesIntersect(obbBoundingBox, aabb);
+            double targetLatitude = earthPoint.Y;  // Latitude in degrees
+            double targetLongitude = earthPoint.X; // Longitude in degrees
+            double targetAltitude = earthPoint.Z;  // Altitude in meters
+
+            // Convert the point to ECEF coordinates
+            Vector3d ecefVector = LatLonToECEF(targetLatitude, targetLongitude, targetAltitude);
+
+            // Return the ECEF point as Point3d
+            return new Point3d(ecefVector.X, ecefVector.Y, ecefVector.Z);
         }
 
     }
