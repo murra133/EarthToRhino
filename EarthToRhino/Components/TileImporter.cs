@@ -47,8 +47,8 @@ namespace EarthToRhino.Components
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("All Files", "FP", "Lists all Files", GH_ParamAccess.list);
-            pManager.AddMeshParameter("Mesh","M","Meshes",GH_ParamAccess.list);
-            pManager.AddGenericParameter("Material", "M2", "Material", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Mesh","Me","Meshes",GH_ParamAccess.list);
+            pManager.AddGenericParameter("Material", "Ma", "Material", GH_ParamAccess.list);
         }
 
         /// <summary>
