@@ -1,4 +1,4 @@
-﻿name: Earth To Rhino
+﻿name: EarthToRhino
 version: 0.0.1
 authors:
   - Paris Nikitidis
@@ -17,7 +17,7 @@ description:
 url: "https://github.com/murra133/EarthToRhino"
 keywords:
   - Cesium
-  - 3D Tiles
+  - 3D-Tiles
   - Earth
   - AECtech
 icon: Logo_black blue.png
