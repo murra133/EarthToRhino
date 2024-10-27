@@ -212,13 +212,6 @@ namespace EarthToRhino.Components
 
             var combined =
                 Brep.CreateFromMesh(tempMesh, true);
-            //    Brep.CreateFromCornerPoints(
-            //    upX,
-            //    upY,
-            //    douwnX,
-            //    downY,
-            //    1000000
-            //);
 
 
             Point3d evalPoint_comb;
@@ -271,21 +264,21 @@ namespace EarthToRhino.Components
             g.Transform(translate);
 
             var orientedMeshes = new List<Mesh>();
-            foreach (var m in meshes)
-            {
-                var gO = m.DuplicateMesh();
-                if (gO.Transform(orient))
-                    orientedMeshes.Add(gO);
-            }
-
-            //foreach (var m in g.Objects)
+            //foreach (var m in meshes)
             //{
-
-            //    var nms = new Mesh();
-            //    Grasshopper.Kernel.GH_Convert.ToMesh(m, ref nms, new GH_Conversion());
-            //    orientedMeshes.Add(nms);
-
+            //    var gO = m.DuplicateMesh();
+            //    if (gO.Transform(orient))
+            //        orientedMeshes.Add(gO);
             //}
+
+            foreach (var m in g.Objects)
+            {
+
+                var nms = new Mesh();
+                Grasshopper.Kernel.GH_Convert.ToMesh(m, ref nms, new GH_Conversion());
+                orientedMeshes.Add(nms);
+
+            }
 
             return orientedMeshes;
         }
