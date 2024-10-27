@@ -27,12 +27,11 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddIntegerParameter("Level of Detail", "D", "The level of detail", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("Level of Detail", "D", "The level of detail (expressed as recursion depth)", GH_ParamAccess.item);
             pManager.AddRectangleParameter("Boundary", "B", "The boundary of the area to download", GH_ParamAccess.item);
             pManager.AddTextParameter("Temp Folder", "F", "The temporary folder to store the tiles", GH_ParamAccess.item);
             pManager.AddTextParameter("API Key", "K", "The API key", GH_ParamAccess.item);
 
-            pManager[0].Optional = true;
             pManager[1].Optional = true;
         }
 
@@ -64,7 +63,7 @@ namespace EarthToRhino.Components
             string tempFolder = "";
             string apiKey = "";
 
-            DA.GetData(0, ref levelOfDetail);
+            
             DA.GetData(1, ref boundary);
             DA.GetData(2, ref tempFolder);
             DA.GetData(3, ref apiKey);
@@ -88,30 +87,24 @@ namespace EarthToRhino.Components
 
             TileHandler tileHandler = new TileHandler();
 
+            if (DA.GetData(0, ref levelOfDetail))
+            {
+                tileHandler.SetRecursionDepth(levelOfDetail);
+            }
+            else
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Level of Detail is missing");
+                return;
+            }
+
+
             TileClusterDTO rootCluster = tileHandler.GetTileCluster(RoutesController.Root);
 
-            List<BoundingVolumeDTO> bboxes = new List<BoundingVolumeDTO>();
+            tileHandler.UnpackTileRecursive(rootCluster.Root, 0);
 
-            foreach (ChildDTO child in rootCluster.Root.Children)
-            {
-                foreach (ChildDTO grandChild in child.Children)
-                {
-                    TileClusterDTO firstLayer = tileHandler.GetTileCluster(grandChild.Content.Uri);
+            tileHandler.DownloadAllChildren();
 
-                    foreach (ChildDTO firstLayerChild in firstLayer.Root.Children)
-                    {
-                        foreach (ChildDTO firstLayerGrandchild in firstLayerChild.Children)
-                        {
-                            if (tileHandler.TrySaveChild(firstLayerGrandchild))
-                            {
-                                bboxes.Add(firstLayerGrandchild.BoundingVolume);
-                            }
-                            
-                        }
-                        
-                    }
-                }
-            }
+            List<BoundingVolumeDTO> bboxes = tileHandler.GetAllBoundingVolumes();
 
             GH_Structure<GH_Number> dataTree = new GH_Structure<GH_Number>();
 
