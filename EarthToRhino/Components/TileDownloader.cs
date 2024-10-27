@@ -5,6 +5,8 @@ using System.Net;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using System.Drawing;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
 
 namespace EarthToRhino.Components
 {
@@ -48,7 +50,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-
+            pManager.AddNumberParameter("BBoxes", "BB", "Bounding boxes", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -88,6 +90,8 @@ namespace EarthToRhino.Components
 
             TileClusterDTO rootCluster = tileHandler.GetTileCluster(RoutesController.Root);
 
+            List<BoundingVolumeDTO> bboxes = new List<BoundingVolumeDTO>();
+
             foreach (ChildDTO child in rootCluster.Root.Children)
             {
                 foreach (ChildDTO grandChild in child.Children)
@@ -98,12 +102,31 @@ namespace EarthToRhino.Components
                     {
                         foreach (ChildDTO firstLayerGrandchild in firstLayerChild.Children)
                         {
-                            tileHandler.TrySaveChild(firstLayerGrandchild);
+                            if (tileHandler.TrySaveChild(firstLayerGrandchild))
+                            {
+                                bboxes.Add(firstLayerGrandchild.BoundingVolume);
+                            }
+                            
                         }
                         
                     }
                 }
             }
+
+            GH_Structure<GH_Number> dataTree = new GH_Structure<GH_Number>();
+
+            for (int i = 0; i < bboxes.Count; i++)
+            {
+                GH_Path path = new GH_Path(i);
+                BoundingVolumeDTO dto = bboxes[i];
+
+                foreach (double num in dto.Box)
+                {
+                    dataTree.Append(new GH_Number(num), path);
+                }
+            }
+
+            DA.SetDataTree(0, dataTree);
         }
 
         /// <summary>

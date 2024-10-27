@@ -37,6 +37,11 @@ namespace EarthToRhino
 
                 HttpResponseMessage response = client.GetAsync(finalUri).Result;
 
+                if (!response.IsSuccessStatusCode)
+                {
+                    return false;
+                }
+
                 var byteArray = response.Content.ReadAsByteArrayAsync().Result.ToArray();
 
                 using (BinaryWriter writer = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
