@@ -57,6 +57,7 @@ namespace EarthToRhino.Components
             pManager.AddNumberParameter("BBoxes", "BB", "All bounding boxes", GH_ParamAccess.list);
             pManager.AddPointParameter("Query Point ECEF", "QPE", "Query point in ECEF coordinates", GH_ParamAccess.item);
             pManager.AddTextParameter("Loaded Files", "LF", "Lists of all loaded files", GH_ParamAccess.list);
+            pManager.AddPointParameter("Boundary ECEF", "BECEF", "Boundary rectangle in ECEF coordinates", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -138,10 +139,15 @@ namespace EarthToRhino.Components
                     dataTree.Append(new GH_Number(num), path);
                 }
             }
+            // Convert the boundary rectangle to ECEF for output
+            List<Point3d> boundaryECEF = GeoHelper.ConvertBoundaryToECEF(boundary);
 
+            // Output the boundary rectangle in ECEF
+            
             DA.SetDataTree(0, dataTree);
             DA.SetData(1, queryPointECEFPoint);
             DA.SetDataList(2, tileHandler.DownloadedFilePaths);
+            DA.SetDataTree(3, Utilities.PointsToDataTree(boundaryECEF));
         }
 
         /// <summary>

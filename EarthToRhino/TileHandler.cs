@@ -14,6 +14,9 @@ namespace EarthToRhino
     public class TileHandler
     {
         public Rectangle3d Boundary { get; private set; }
+
+        public Brep QueryVolume { get; private set; }
+
         public int MaxRecursionDepth { get; private set; }
 
         public List<string> DownloadedFilePaths { get; private set; }

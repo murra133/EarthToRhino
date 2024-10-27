@@ -6,6 +6,9 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
+using Rhino.Geometry;
 
 namespace EarthToRhino
 {
@@ -34,6 +37,18 @@ namespace EarthToRhino
                 return sb.ToString();
             }
         }
+
+        public static GH_Structure<GH_Point> PointsToDataTree(List<Point3d> points)
+        {
+            GH_Structure<GH_Point> dataTree = new GH_Structure<GH_Point>();
+            GH_Path path = new GH_Path(0);
+            foreach (var pt in points)
+            {
+                dataTree.Append(new GH_Point(pt), path);
+            }
+            return dataTree;
+        }
+
 
     }
 }

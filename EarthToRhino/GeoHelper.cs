@@ -224,7 +224,7 @@ namespace EarthToRhino
             // Get the model to earth transformation
             Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
 
-            // Convert boundary rectangle to ECEF and create AABB
+            // Convert boundary rectangle to ECEF
             Point3d[] rectangleCorners = new Point3d[4];
             for (int i = 0; i < 4; i++)
             {
@@ -248,8 +248,21 @@ namespace EarthToRhino
                 rectangleCornersECEF.Add(new Point3d(cornerECEF.X, cornerECEF.Y, cornerECEF.Z));
             }
 
-            // Create an AABB from the rectangle corners
-            BoundingBox queryAABB = new BoundingBox(rectangleCornersECEF);
+            // Compute min and max X and Y
+            double minX = rectangleCornersECEF.Min(p => p.X);
+            double minY = rectangleCornersECEF.Min(p => p.Y);
+            double maxX = rectangleCornersECEF.Max(p => p.X);
+            double maxY = rectangleCornersECEF.Max(p => p.Y);
+
+            // Set minZ and maxZ to large values to encompass all altitudes
+            double minZ = -1e6; // Adjust as needed
+            double maxZ = 1e6;
+
+            // Create the query AABB with extended Z bounds
+            BoundingBox queryAABB = new BoundingBox(
+                new Point3d(minX, minY, minZ),
+                new Point3d(maxX, maxY, maxZ)
+            );
 
             // Parse the bounding volume to create an OrientedBoundingBox
             Vector3d center = new Vector3d(bbox.Box[0], bbox.Box[1], bbox.Box[2]);
@@ -390,6 +403,43 @@ namespace EarthToRhino
             // Return the ECEF point as Point3d
             return new Point3d(ecefVector.X, ecefVector.Y, ecefVector.Z);
         }
+
+        public static List<Point3d> ConvertBoundaryToECEF(Rectangle3d boundary)
+        {
+            // Get the EarthAnchorPoint from the active Rhino document
+            EarthAnchorPoint earthAnchor = Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint;
+
+            // Get the model to earth transformation
+            Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
+
+            // Get the corners of the rectangle
+            Point3d[] rectangleCorners = new Point3d[4];
+            for (int i = 0; i < 4; i++)
+            {
+                rectangleCorners[i] = boundary.Corner(i);
+            }
+
+            List<Point3d> rectangleCornersECEF = new List<Point3d>();
+
+            // Convert each corner to ECEF
+            foreach (Point3d corner in rectangleCorners)
+            {
+                // Transform the corner to Earth coordinates
+                Point3d earthCorner = corner;
+                earthCorner.Transform(modelToEarth);
+
+                double cornerLatitude = earthCorner.Y;   // Latitude in degrees
+                double cornerLongitude = earthCorner.X;  // Longitude in degrees
+                double cornerAltitude = earthCorner.Z;   // Altitude in meters
+
+                // Convert to ECEF coordinates
+                Vector3d cornerECEF = LatLonToECEF(cornerLatitude, cornerLongitude, cornerAltitude);
+                rectangleCornersECEF.Add(new Point3d(cornerECEF.X, cornerECEF.Y, cornerECEF.Z));
+            }
+
+            return rectangleCornersECEF;
+        }
+
 
     }
 }
