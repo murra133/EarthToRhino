@@ -17,7 +17,7 @@ namespace EarthToRhino.Components
         /// </summary>
         public TileDownloader()
           : base("Tile Downloader", "TD",
-              "Description",
+              "Download Cesium 3D Tiles through API connection.",
               Utilities.CATEGORY_NAME, Utilities.SUBCATEGORY_NAME)
         {
         }

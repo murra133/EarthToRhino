@@ -26,7 +26,7 @@ namespace EarthToRhino.Components
         RhinoDoc doc;
         public TileImporter()
           : base("Tile Importer", "TI",
-              "Loads Tile into View of Rhino",
+              "Load your 3D Tiles into the Rhino Viewport.",
               Utilities.CATEGORY_NAME, Utilities.SUBCATEGORY_NAME)
         {
             doc = RhinoDoc.CreateHeadless(null);
