@@ -272,7 +272,9 @@ namespace EarthToRhino.Components
 
             Rhino.Geometry.Transform orient = Rhino.Geometry.Transform.ChangeBasis(pl2, pl1);
             BoundingBox bbGroup = new BoundingBox(vertsFlat);
-            Rhino.Geometry.Transform translate = Rhino.Geometry.Transform.Translation(point - bbGroup.Center);
+            Point3d centerPoint = new Point3d(bbGroup.Center.X, bbGroup.Center.Y, bbGroup.Center.Z);
+            Rhino.Geometry.Transform translate = Rhino.Geometry.Transform.Translation(point - centerPoint);
+            //Rhino.Geometry.Transform translate = Rhino.Geometry.Transform.Translation(point - bbGroup.Center);
             g.Transform(orient);
             g.Transform(translate);
 
