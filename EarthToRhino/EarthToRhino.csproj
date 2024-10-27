@@ -73,6 +73,16 @@
 	  <None Update="Resources\artboard_3.png">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Resources\Logo_black blue.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Resources\manifest.yml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="Copy &quot;$(TargetDir)Resources&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;del &quot;$(TargetDir)Resources*&quot;" />
+	</Target>
 
 </Project>

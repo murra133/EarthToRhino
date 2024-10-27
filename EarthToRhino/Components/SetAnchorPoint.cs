@@ -20,7 +20,7 @@ namespace EarthToRhino.Components
         /// </summary>
         public SetAnchorPoint()
           : base("Set Anchor Point", "SAP",
-            "Description",
+            "Define the Earth Anchor Point for your project.",
             Utilities.CATEGORY_NAME, Utilities.SUBCATEGORY_NAME)
         {
         }
