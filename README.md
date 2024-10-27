@@ -40,6 +40,9 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 - Cesium API Key
 
 ## Installation
+Get it through the Package Manager! Search for Earth To Rhino and press install.
+
+or... install through the source code:
 
 1. Install package by running:
 ```
