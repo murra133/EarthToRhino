@@ -72,10 +72,13 @@ namespace EarthToRhino.Components
             DA.GetData(3, ref orient);
 
             getAllFiles(filepaths);
+            int counter = 0;
 
             foreach (RhinoObject obj in doc.Objects)
             {
-                
+                string file = Path.GetFileName(filepaths[counter]);
+                file = file.Replace(".glb", "");
+
                 if (obj == null) continue;
                 Mesh[] m = obj.GetMeshes(MeshType.Render);
                 try
@@ -89,6 +92,7 @@ namespace EarthToRhino.Components
                                 mesh.Normals.ComputeNormals();
                                 meshList.Add(mesh);
                                 RenderMaterial renderMaterial = obj.RenderMaterial;
+                                renderMaterial.Name = file;
                                 if (renderMaterial != null)
                                 {
                                     // Create a new material with texture information
@@ -107,6 +111,7 @@ namespace EarthToRhino.Components
                     Debug.WriteLine(e);
 
                 }
+                counter += 1;
             }
 
 

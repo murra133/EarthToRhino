@@ -7,6 +7,8 @@ using Rhino.Geometry;
 using Rhino.Render;
 using Rhino;
 using System.Diagnostics;
+using Rhino.UI;
+using Rhino.DocObjects;
 
 namespace EarthToRhino.Components
 {
@@ -69,24 +71,24 @@ namespace EarthToRhino.Components
                         RenderMaterial material = materials[i].MaterialBestGuess();
 
                         bool exists = false;
-
+                        
                         foreach (RenderMaterial m in Rhino.RhinoDoc.ActiveDoc.RenderMaterials)
                         {
-                            Debug.WriteLine(m);
-                            if (m.Equals(material) == true)
+                            if (m.Name == material.Name)
                             {
                                 exists = true;
                                 material = m;
-
-                                Debug.WriteLine("material exists");
+                            }
+                            if (exists)
+                            {
+                                break;
                             }
                         }
 
                         if (exists == false)
                         {
-                            Rhino.RhinoDoc.ActiveDoc.RenderMaterials.Add(material);
+                            bool adding = Rhino.RhinoDoc.ActiveDoc.RenderMaterials.Add(material);
                         }
-                                               
 
                         Rhino.DocObjects.ObjectAttributes attributes = new Rhino.DocObjects.ObjectAttributes();
 
