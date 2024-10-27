@@ -16,7 +16,7 @@
   
   <PropertyGroup>
     <!-- Specifies information for Assembly and Yak -->
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Title>Earth To Rhino</Title>
     <Company>EarthToRhino AECtech 2024</Company>
     <Description>EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.</Description>
