@@ -20,11 +20,29 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 ## Architecture
 ![Architecture](Assets/Architecture.gif)
 
+```
+     +--------------+       +-------------------------------+                           
+     |Cesium Schema |       |      Grasshopper Plugin       |                           
+     +------+-------+       +---------------+---------------+                           
+            |                               |                                           
+            |                               |                                           
+            |               +-------------------------------+                           
+     +--------------+       |     Geolocation mapping       |                           
+     |              |       |                               |       +--------------+    
+     |     glTF     |-------|  3D Tiles Download REST API   |-------|  Rhinoceros  |    
+     |              |       |                               |       +--------------+    
+     +--------------+       | Convert to Rhino Mesh. Custom |                           
+                            +-------------------------------+                           
+```
+
 ## Prerequisites
 - Rhino 8
 - Cesium API Key
 
 ## Installation
+Get it through the Package Manager! Search for Earth To Rhino and press install.
+
+or... install through the source code:
 
 1. Install package by running:
 ```

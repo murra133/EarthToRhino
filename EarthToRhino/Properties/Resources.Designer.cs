@@ -89,5 +89,15 @@ namespace EarthToRhino.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Logo_black_blue {
+            get {
+                object obj = ResourceManager.GetObject("Logo_black blue", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

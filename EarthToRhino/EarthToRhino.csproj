@@ -16,11 +16,21 @@
   
   <PropertyGroup>
     <!-- Specifies information for Assembly and Yak -->
-    <Version>1.0</Version>
-    <Title>EarthToRhino</Title>
-    <Company>EarthToRhino Authors</Company>
-    <Description>Description of EarthToRhino</Description>
+    <Version>0.0.1</Version>
+    <Title>Earth To Rhino</Title>
+    <Company>EarthToRhino AECtech 2024</Company>
+    <Description>EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.</Description>
+    <ApplicationIcon>Logo_black blue.ico</ApplicationIcon>
+    <Authors>Paris Nikitidis, Sergey Pigach, Alfredo Chavez, Quoc Dang, Joanna Sabak, Weiting Kong, Jeroen Janssen, Brian Murray, Nico Azel, Jason Yang</Authors>
+    <Copyright>© copyright 2024 Earth To Rhino</Copyright>
+    <PackageProjectUrl>https://github.com/murra133/EarthToRhino</PackageProjectUrl>
+    <PackageIcon>Logo_black blue.png</PackageIcon>
+    <RepositoryUrl>https://github.com/murra133/EarthToRhino</RepositoryUrl>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Content Include="Logo_black blue.ico" />
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="8.0.23304.9001" ExcludeAssets="runtime" />
@@ -60,10 +70,15 @@
 	  <EmbeddedResource Update="Properties\Resources.resx">
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Update="Logo_black blue.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	  <None Update="Resources\artboard_1.png">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
@@ -73,6 +88,19 @@
 	  <None Update="Resources\artboard_3.png">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Resources\Logo_black blue.ico">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Resources\Logo_black blue.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Resources\manifest.yml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="Copy &quot;$(TargetDir)Resources&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;del &quot;$(TargetDir)Resources*&quot;" />
+	</Target>
 
 </Project>

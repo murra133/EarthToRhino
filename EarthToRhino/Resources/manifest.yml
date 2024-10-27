@@ -1,0 +1,23 @@
+﻿name: Earth To Rhino
+version: 0.0.1
+authors:
+  - Paris Nikitidis
+  - Sergey Pigach
+  - Alfredo Chavez
+  - Quoc Dang
+  - Joanna Sabak
+  - Weiting Kong
+  - Jeroen Janssen
+  - Brian Murray
+  - Nico Azel
+  - Jason Yang
+description: 
+  EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. 
+  This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.  
+url: "https://github.com/murra133/EarthToRhino"
+keywords:
+  - Cesium
+  - 3D Tiles
+  - Earth
+  - AECtech
+icon: Logo_black blue.png
