@@ -81,4 +81,8 @@
 	  </None>
 	</ItemGroup>
 
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="Copy &quot;$(TargetDir)Resources&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;del &quot;$(TargetDir)Resources*&quot;" />
+	</Target>
+
 </Project>
