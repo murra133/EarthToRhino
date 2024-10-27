@@ -186,113 +186,18 @@ namespace EarthToRhino
             return new Vector3d(x, y, z);
         }
 
-        public class OrientedBoundingBox
-        {
-            public Point3d Center { get; set; }
-            public Vector3d HalfExtents { get; set; }
-            public Transform Rotation { get; set; }
 
-            public OrientedBoundingBox(Point3d center, Vector3d halfExtents, Transform rotation)
-            {
-                Center = center;
-                HalfExtents = halfExtents;
-                Rotation = rotation;
-            }
-
-            public bool Contains(Point3d point)
-            {
-                // Compute the vector from the box center to the point
-                Vector3d d = point - Center;
-
-                // Project d onto each of the local axes
-                double dx = d * new Vector3d(Rotation.M00, Rotation.M10, Rotation.M20);
-                double dy = d * new Vector3d(Rotation.M01, Rotation.M11, Rotation.M21);
-                double dz = d * new Vector3d(Rotation.M02, Rotation.M12, Rotation.M22);
-
-                // Check if the projected distances are within the half extents
-                return Math.Abs(dx) <= HalfExtents.X &&
-                       Math.Abs(dy) <= HalfExtents.Y &&
-                       Math.Abs(dz) <= HalfExtents.Z;
-            }
-        }
 
         public static bool IsTileInBoundary(Rectangle3d boundary, BoundingVolumeDTO bbox)
         {
-            // Get the EarthAnchorPoint from the active Rhino document
-            EarthAnchorPoint earthAnchor = Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint;
+            // Step 1: Get the latitude and longitude range of the boundary rectangle
+            var boundaryLatLonRange = GetBoundaryLatLonRange(boundary);
 
-            // Get the model to earth transformation
-            Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
+            // Step 2: Get the latitude and longitude range of the tile's bounding volume
+            var tileLatLonRange = GetTileLatLonRange(bbox);
 
-            // Convert boundary rectangle to ECEF
-            Point3d[] rectangleCorners = new Point3d[4];
-            for (int i = 0; i < 4; i++)
-            {
-                rectangleCorners[i] = boundary.Corner(i);
-            }
-
-            List<Point3d> rectangleCornersECEF = new List<Point3d>();
-
-            foreach (Point3d corner in rectangleCorners)
-            {
-                // Transform the corner to Earth coordinates
-                Point3d earthCorner = corner;
-                earthCorner.Transform(modelToEarth);
-
-                double cornerLatitude = earthCorner.Y;   // Latitude in degrees
-                double cornerLongitude = earthCorner.X;  // Longitude in degrees
-                double cornerAltitude = earthCorner.Z;   // Altitude in meters
-
-                // Convert to ECEF coordinates
-                Vector3d cornerECEF = LatLonToECEF(cornerLatitude, cornerLongitude, cornerAltitude);
-                rectangleCornersECEF.Add(new Point3d(cornerECEF.X, cornerECEF.Y, cornerECEF.Z));
-            }
-
-            // Compute min and max X and Y
-            double minX = rectangleCornersECEF.Min(p => p.X);
-            double minY = rectangleCornersECEF.Min(p => p.Y);
-            double maxX = rectangleCornersECEF.Max(p => p.X);
-            double maxY = rectangleCornersECEF.Max(p => p.Y);
-
-            // Set minZ and maxZ to large values to encompass all altitudes
-            double minZ = -1e6; // Adjust as needed
-            double maxZ = 1e6;
-
-            // Create the query AABB with extended Z bounds
-            BoundingBox queryAABB = new BoundingBox(
-                new Point3d(minX, minY, minZ),
-                new Point3d(maxX, maxY, maxZ)
-            );
-
-            // Parse the bounding volume to create an OrientedBoundingBox
-            Vector3d center = new Vector3d(bbox.Box[0], bbox.Box[1], bbox.Box[2]);
-            Vector3d halfAxisX = new Vector3d(bbox.Box[3], bbox.Box[4], bbox.Box[5]);
-            Vector3d halfAxisY = new Vector3d(bbox.Box[6], bbox.Box[7], bbox.Box[8]);
-            Vector3d halfAxisZ = new Vector3d(bbox.Box[9], bbox.Box[10], bbox.Box[11]);
-
-            // Compute the extents (lengths) of the half-axes
-            double extentX = halfAxisX.Length;
-            double extentY = halfAxisY.Length;
-            double extentZ = halfAxisZ.Length;
-
-            // Normalize the half-axes to get the orientation axes
-            Vector3d axisX = halfAxisX / extentX;
-            Vector3d axisY = halfAxisY / extentY;
-            Vector3d axisZ = halfAxisZ / extentZ;
-
-            // Build the rotation matrix
-            Transform rotation = Transform.Identity;
-            rotation.M00 = axisX.X; rotation.M01 = axisY.X; rotation.M02 = axisZ.X;
-            rotation.M10 = axisX.Y; rotation.M11 = axisY.Y; rotation.M12 = axisZ.Y;
-            rotation.M20 = axisX.Z; rotation.M21 = axisY.Z; rotation.M22 = axisZ.Z;
-
-            // Create the OrientedBoundingBox
-            Vector3d halfExtents = new Vector3d(extentX, extentY, extentZ);
-            Point3d obbCenter = new Point3d(center.X, center.Y, center.Z);
-            OrientedBoundingBox obb = new OrientedBoundingBox(obbCenter, halfExtents, rotation);
-
-            // Perform the intersection test using SAT
-            bool intersects = OBBIntersectsAABB(obb, queryAABB);
+            // Step 3: Check for overlap between the boundary and tile ranges
+            bool intersects = RangesOverlap(boundaryLatLonRange, tileLatLonRange);
 
             return intersects;
         }
@@ -440,6 +345,198 @@ namespace EarthToRhino
             return rectangleCornersECEF;
         }
 
+        // Helper function to get the lat/lon range of the boundary rectangle
+        private static (double MinLat, double MaxLat, double MinLon, double MaxLon) GetBoundaryLatLonRange(Rectangle3d boundary)
+        {
+            // Get the EarthAnchorPoint from the active Rhino document
+            EarthAnchorPoint earthAnchor = Rhino.RhinoDoc.ActiveDoc.EarthAnchorPoint;
 
+            // Get the model to earth transformation
+            Transform modelToEarth = earthAnchor.GetModelToEarthTransform(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
+
+            // Convert boundary rectangle corners to lat/lon
+            Point3d[] rectangleCorners = new Point3d[4];
+            for (int i = 0; i < 4; i++)
+            {
+                rectangleCorners[i] = boundary.Corner(i);
+            }
+
+            List<(double Lat, double Lon)> boundaryLatLon = new List<(double, double)>();
+
+            foreach (Point3d corner in rectangleCorners)
+            {
+                // Transform the corner to Earth coordinates
+                Point3d earthCorner = corner;
+                earthCorner.Transform(modelToEarth);
+
+                double cornerLatitude = earthCorner.Y;   // Latitude in degrees
+                double cornerLongitude = earthCorner.X;  // Longitude in degrees
+
+                boundaryLatLon.Add((cornerLatitude, cornerLongitude));
+            }
+
+            double minLat = boundaryLatLon.Min(p => p.Lat);
+            double maxLat = boundaryLatLon.Max(p => p.Lat);
+            double minLon = boundaryLatLon.Min(p => p.Lon);
+            double maxLon = boundaryLatLon.Max(p => p.Lon);
+
+            return (minLat, maxLat, minLon, maxLon);
+        }
+
+        // Helper function to get the lat/lon range of the tile's bounding volume
+        private static (double MinLat, double MaxLat, double MinLon, double MaxLon) GetTileLatLonRange(BoundingVolumeDTO bbox)
+        {
+            // Extract the center and axes from the bounding volume DTO
+            Point3d center = new Point3d(bbox.Box[0], bbox.Box[1], bbox.Box[2]);
+            Vector3d halfAxisX = new Vector3d(bbox.Box[3], bbox.Box[4], bbox.Box[5]);
+            Vector3d halfAxisY = new Vector3d(bbox.Box[6], bbox.Box[7], bbox.Box[8]);
+            Vector3d halfAxisZ = new Vector3d(bbox.Box[9], bbox.Box[10], bbox.Box[11]);
+
+            // Compute the eight corners of the OBB
+            Point3d[] corners = new Point3d[8];
+            int i = 0;
+            for (int x = -1; x <= 1; x += 2)
+            {
+                for (int y = -1; y <= 1; y += 2)
+                {
+                    for (int z = -1; z <= 1; z += 2)
+                    {
+                        Vector3d cornerOffset = (x * halfAxisX) + (y * halfAxisY) + (z * halfAxisZ);
+                        Point3d corner = center + cornerOffset;
+                        corners[i++] = corner;
+                    }
+                }
+            }
+
+            // Convert the corner points from ECEF to geodetic coordinates
+            List<(double Lat, double Lon)> tileLatLon = new List<(double, double)>();
+            foreach (Point3d corner in corners)
+            {
+                var (lat, lon, _) = EcefToGeodetic(corner.X, corner.Y, corner.Z);
+                tileLatLon.Add((lat, lon));
+            }
+
+            double minLat = tileLatLon.Min(p => p.Lat);
+            double maxLat = tileLatLon.Max(p => p.Lat);
+            double minLon = tileLatLon.Min(p => p.Lon);
+            double maxLon = tileLatLon.Max(p => p.Lon);
+
+            return (minLat, maxLat, minLon, maxLon);
+        }
+
+        // Helper function to check for range overlap
+        private static bool RangesOverlap(
+            (double MinLat, double MaxLat, double MinLon, double MaxLon) boundaryRange,
+            (double MinLat, double MaxLat, double MinLon, double MaxLon) tileRange)
+        {
+            // Normalize longitude ranges to 0° to 360°
+            (double MinLon, double MaxLon) boundaryLonRange = NormalizeLongitudeRange(boundaryRange.MinLon, boundaryRange.MaxLon);
+            (double MinLon, double MaxLon) tileLonRange = NormalizeLongitudeRange(tileRange.MinLon, tileRange.MaxLon);
+
+            // Check latitude overlap using the general condition
+            bool latOverlap = boundaryRange.MaxLat >= tileRange.MinLat && tileRange.MaxLat >= boundaryRange.MinLat;
+
+            // Check longitude overlap, accounting for wrap-around
+            bool lonOverlap = LongitudesOverlap(boundaryLonRange.MinLon, boundaryLonRange.MaxLon, tileLonRange.MinLon, tileLonRange.MaxLon);
+
+            return latOverlap && lonOverlap;
+        }
+
+
+        // Function to normalize longitude to 0° to 360°
+        private static (double MinLon, double MaxLon) NormalizeLongitudeRange(double minLon, double maxLon)
+        {
+            minLon = (minLon + 360) % 360;
+            maxLon = (maxLon + 360) % 360;
+
+            // Ensure minLon <= maxLon
+            if (minLon > maxLon)
+            {
+                double temp = minLon;
+                minLon = maxLon;
+                maxLon = temp;
+            }
+
+            return (minLon, maxLon);
+        }
+
+        // Function to check longitude overlap, accounting for dateline crossing
+        private static bool LongitudesOverlap(double minLon1, double maxLon1, double minLon2, double maxLon2)
+        {
+            // Handle cases where ranges might cross the 0°/360° point
+            if (maxLon1 < minLon1) maxLon1 += 360;
+            if (maxLon2 < minLon2) maxLon2 += 360;
+
+            // Check for overlap
+            bool overlap = maxLon1 >= minLon2 && maxLon2 >= minLon1;
+
+            // Also check wrap-around overlap
+            if (maxLon1 >= minLon2 + 360)
+                overlap |= (maxLon1 - 360) >= minLon2 && maxLon2 >= (minLon1 - 360);
+
+            if (maxLon2 >= minLon1 + 360)
+                overlap |= (maxLon2 - 360) >= minLon1 && maxLon1 >= (minLon2 - 360);
+
+            return overlap;
+        }
+
+
+        // Function to convert ECEF coordinates to geodetic coordinates (latitude, longitude, altitude)
+        private static (double Latitude, double Longitude, double Altitude) EcefToGeodetic(double x, double y, double z)
+        {
+            // WGS84 ellipsoid constants
+            double a = 6378137.0; // Semi-major axis in meters
+            double e2 = 6.69437999014e-3; // First eccentricity squared
+
+            double b = Math.Sqrt(a * a * (1 - e2));
+            double ep = Math.Sqrt((a * a - b * b) / (b * b));
+            double p = Math.Sqrt(x * x + y * y);
+            double th = Math.Atan2(a * z, b * p);
+
+            double lon = Math.Atan2(y, x);
+            double lat = Math.Atan2((z + ep * ep * b * Math.Pow(Math.Sin(th), 3)),
+                                    (p - e2 * a * Math.Pow(Math.Cos(th), 3)));
+
+            double N = a / Math.Sqrt(1 - e2 * Math.Sin(lat) * Math.Sin(lat));
+            double alt = p / Math.Cos(lat) - N;
+
+            // Convert radians to degrees
+            lat = lat * (180.0 / Math.PI);
+            lon = lon * (180.0 / Math.PI);
+
+            return (lat, lon, alt);
+        }
+
+
+    }
+
+    public class OrientedBoundingBox
+    {
+        public Point3d Center { get; set; }
+        public Vector3d HalfExtents { get; set; }
+        public Transform Rotation { get; set; }
+
+        public OrientedBoundingBox(Point3d center, Vector3d halfExtents, Transform rotation)
+        {
+            Center = center;
+            HalfExtents = halfExtents;
+            Rotation = rotation;
+        }
+
+        public bool Contains(Point3d point)
+        {
+            // Compute the vector from the box center to the point
+            Vector3d d = point - Center;
+
+            // Project d onto each of the local axes
+            double dx = d * new Vector3d(Rotation.M00, Rotation.M10, Rotation.M20);
+            double dy = d * new Vector3d(Rotation.M01, Rotation.M11, Rotation.M21);
+            double dz = d * new Vector3d(Rotation.M02, Rotation.M12, Rotation.M22);
+
+            // Check if the projected distances are within the half extents
+            return Math.Abs(dx) <= HalfExtents.X &&
+                   Math.Abs(dy) <= HalfExtents.Y &&
+                   Math.Abs(dz) <= HalfExtents.Z;
+        }
     }
 }

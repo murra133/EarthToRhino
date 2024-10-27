@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
+using static EarthToRhino.GeoHelper;
 
 namespace EarthToRhino
 {
@@ -48,7 +49,6 @@ namespace EarthToRhino
             }
             return dataTree;
         }
-
 
     }
 }
