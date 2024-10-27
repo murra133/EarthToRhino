@@ -35,6 +35,9 @@ namespace EarthToRhino.Components
             pManager.AddRectangleParameter("Boundary", "B", "The boundary of the area to download", GH_ParamAccess.item);
             pManager.AddTextParameter("Temp Folder", "F", "The temporary folder to store the tiles", GH_ParamAccess.item);
             pManager.AddTextParameter("API Key", "K", "The API key", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Clear Temp Folder", "C", "Clear the temp folder before downloading", GH_ParamAccess.item, true);
+
+            pManager[4].Optional = true;
         }
 
         /// <summary>
@@ -65,11 +68,13 @@ namespace EarthToRhino.Components
             Rectangle3d boundary = new Rectangle3d();
             string tempFolder = "";
             string apiKey = "";
+            bool clearTempFolder = true;
 
-            
+
             DA.GetData(1, ref boundary);
             DA.GetData(2, ref tempFolder);
             DA.GetData(3, ref apiKey);
+            DA.GetData(4, ref clearTempFolder);
 
             if (string.IsNullOrEmpty(apiKey))
             {
@@ -85,6 +90,11 @@ namespace EarthToRhino.Components
 
             PathController.SetTempFolder(tempFolder);
             WebAPI.SetApiKey(apiKey);
+
+            if (clearTempFolder)
+            {
+                PathController.ClearTempFolder();
+            }
 
             TileHandler tileHandler = new TileHandler(boundary);
  
