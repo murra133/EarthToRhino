@@ -137,7 +137,7 @@ namespace EarthToRhino
 
         public bool IsViableTile(ChildDTO child)
         {
-            if (IgnoreBoundary) return true;
+            //if (IgnoreBoundary) return true;
             var boundingBox = new EarthToRhino.BoundingBox(child.BoundingVolume);
             var region = new EarthToRhino.Region(this.Boundary);
             bool isInBoundary = EcefChecker.IsBoundingBoxInRegion(boundingBox, region);
