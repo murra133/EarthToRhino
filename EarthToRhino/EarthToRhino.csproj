@@ -20,7 +20,7 @@
     <Title>Earth To Rhino</Title>
     <Company>EarthToRhino AECtech 2024</Company>
     <Description>EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.</Description>
-    <ApplicationIcon>Logo_black blue.png</ApplicationIcon>
+    <ApplicationIcon>Logo_black blue.ico</ApplicationIcon>
     <Authors>Paris Nikitidis, Sergey Pigach, Alfredo Chavez, Quoc Dang, Joanna Sabak, Weiting Kong, Jeroen Janssen, Brian Murray, Nico Azel, Jason Yang</Authors>
     <Copyright>© copyright 2024 Earth To Rhino</Copyright>
     <PackageProjectUrl>https://github.com/murra133/EarthToRhino</PackageProjectUrl>
@@ -29,7 +29,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Content Include="Logo_black blue.png" />
+    <Content Include="Logo_black blue.ico" />
   </ItemGroup>
   
   <ItemGroup>
@@ -70,6 +70,7 @@
 	  <EmbeddedResource Update="Properties\Resources.resx">
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </EmbeddedResource>
 	</ItemGroup>
 
