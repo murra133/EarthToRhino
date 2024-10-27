@@ -37,6 +37,7 @@ namespace EarthToRhino.Components
             pManager.AddTextParameter("API Key", "K", "The API key", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Clear Temp Folder", "C", "Clear the temp folder before downloading", GH_ParamAccess.item, true);
 
+            pManager[1].Optional = true;
             pManager[4].Optional = true;
         }
 
@@ -67,13 +68,13 @@ namespace EarthToRhino.Components
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             int levelOfDetail = 0;
-            Rectangle3d boundary = new Rectangle3d();
+            Rectangle3d boundary = default;
             string tempFolder = "";
             string apiKey = "";
             bool clearTempFolder = true;
 
 
-            DA.GetData(1, ref boundary);
+            bool ignoreBoundary = !DA.GetData(1, ref boundary);
             DA.GetData(2, ref tempFolder);
             DA.GetData(3, ref apiKey);
             DA.GetData(4, ref clearTempFolder);
@@ -98,7 +99,7 @@ namespace EarthToRhino.Components
                 PathController.ClearTempFolder();
             }
 
-            TileHandler tileHandler = new TileHandler(boundary);
+            TileHandler tileHandler = new TileHandler(boundary, ignoreBoundary);
  
 
             if (DA.GetData(0, ref levelOfDetail))

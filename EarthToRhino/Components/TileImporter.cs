@@ -38,11 +38,15 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("File Paths", "F", "List of downloaded files", GH_ParamAccess.list);
+            pManager.AddTextParameter("File Paths", "FP", "List of downloaded files", GH_ParamAccess.list);
 
             pManager.AddPointParameter("AnchorPoint", "AP", "The geolocated anchor point", GH_ParamAccess.item);
-            pManager.AddCurveParameter("AreaRect", "AR", "AreaRect", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Orient Tile", "OT", "To orient the tiles or not", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Boundary ECEF", "BECEF", "Boundary rectangle in ECEF coordinates", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Orient Tile", "OT", "To orient the tiles or not", GH_ParamAccess.item, false);
+
+            pManager[0].Optional = true;
+            pManager[1].Optional = true;
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -65,11 +69,15 @@ namespace EarthToRhino.Components
             List<GH_Material> materialList = new List<GH_Material>();
             if (!DA.GetDataList(0, filepaths)) return;
             Point3d anchorP = new Point3d();
-            if (!DA.GetData(1, ref anchorP)) return;
+            DA.GetData(1, ref anchorP);
             Curve rect = new PolyCurve();
-            if (!DA.GetData(2, ref rect)) return;
+
+            bool ignoreBoundary = !DA.GetData(2, ref rect);
+
             bool orient = false;
             DA.GetData(3, ref orient);
+
+            if (ignoreBoundary) orient = false;
 
             getAllFiles(filepaths);
             int counter = 0;

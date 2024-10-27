@@ -15,6 +15,8 @@ namespace EarthToRhino
     {
         public Rectangle3d Boundary { get; private set; }
 
+        public bool IgnoreBoundary { get; private set; }
+
         public Brep QueryVolume { get; private set; }
 
         public int MaxRecursionDepth { get; private set; }
@@ -23,11 +25,12 @@ namespace EarthToRhino
 
         public List<ChildDTO> ChildrenToDownload { get; private set; }
 
-        public TileHandler( Rectangle3d boundary)
+        public TileHandler(Rectangle3d boundary, bool ignoreBoundary=false)
         {
             ChildrenToDownload = new List<ChildDTO>();
             Boundary = boundary;
             DownloadedFilePaths = new List<string>();
+            IgnoreBoundary = ignoreBoundary;
         }
 
         public void SetRecursionDepth(int depth)
@@ -134,6 +137,7 @@ namespace EarthToRhino
 
         public bool IsViableTile(ChildDTO child)
         {
+            if (IgnoreBoundary) return true;
             // Check if the tile intersects with the boundary
             bool isInBoundary = GeoHelper.IsTileInBoundary(this.Boundary, child.BoundingVolume);
 
