@@ -157,6 +157,12 @@ namespace EarthToRhino.Components
 
             // Try importing the file into the active document
             //var success = doc.Import(filePath);
+            if (!File.Exists(filePath))
+            {
+                RhinoApp.WriteLine("Invalid file path. Please provide a valid path.");
+                return false; // Output false if the import failed
+            }
+
             var c = doc.Import(filePath);
 
             // Output the result of the import operation
@@ -169,6 +175,8 @@ namespace EarthToRhino.Components
                 RhinoApp.WriteLine("File import failed.");
                 return true; // Output false if the import failed
             }
+
+
         }
 
 
