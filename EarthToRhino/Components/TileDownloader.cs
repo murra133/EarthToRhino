@@ -81,7 +81,19 @@ namespace EarthToRhino.Components
 
             // Construct the Google Maps API URL
             //double x=0.0, y=0.0; 
-            string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={rect.Boundingbox.Center.X},{rect.Boundingbox.Center.Y}&key={apiKey}";
+            // Assuming you have the two corners:
+
+            double x1 = -74.01096, y1 = 40.70857;
+            double x2 = -74.00682, y2 = 40.71058;
+
+            // Calculate the center point
+            double centerX = (x1 + x2) / 2;
+            double centerY = (y1 + y2) / 2;
+
+            // Construct the URL
+            string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={centerX},{centerY}&key={apiKey}";
+
+            //string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={rect.Boundingbox.Center.X},{rect.Boundingbox.Center.Y}&key={apiKey}";
             //string url = $"https://maps.googleapis.com/maps/api/elevation_api/json?locations={x},{y}&key={apiKey}";
             // Download the JSON response
             using (WebClient client = new WebClient())
