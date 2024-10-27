@@ -91,12 +91,12 @@ namespace EarthToRhino.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static System.Drawing.Bitmap Artboard_4 {
+        internal static byte[] Artboard_4 {
             get {
                 object obj = ResourceManager.GetObject("Artboard_4", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                return ((byte[])(obj));
             }
         }
     }
