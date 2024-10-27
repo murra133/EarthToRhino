@@ -138,8 +138,11 @@ namespace EarthToRhino
         public bool IsViableTile(ChildDTO child)
         {
             if (IgnoreBoundary) return true;
+            var boundingBox = new EarthToRhino.BoundingBox(child.BoundingVolume);
+            var region = new EarthToRhino.Region(this.Boundary);
+            bool isInBoundary = EcefChecker.IsBoundingBoxInRegion(boundingBox, region);
             // Check if the tile intersects with the boundary
-            bool isInBoundary = GeoHelper.IsTileInBoundary(this.Boundary, child.BoundingVolume);
+           // bool isInBoundary = GeoHelper.IsTileInBoundary(this.Boundary, child.BoundingVolume);
 
             return isInBoundary;
         }
