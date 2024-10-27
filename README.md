@@ -45,4 +45,7 @@ Please check out other hackathon projects and future hackathon events 👩‍�
 
 Distributed under the MIT license. See `LICENSE` for more information.
 
+This application utilizes the Google Map Tiles API. By using this application you are bound to their [Terms of Use](https://cloud.google.com/maps-platform/terms)
+and their [Privacy Policy](https://policies.google.com/privacy).
+
 ![Floating in Space](/Assets/Floating_in_Space.gif)
