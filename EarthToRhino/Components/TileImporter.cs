@@ -39,6 +39,10 @@ namespace EarthToRhino.Components
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("File Paths", "F", "List of downloaded files", GH_ParamAccess.list);
+
+            pManager.AddPointParameter("AnchorPoint", "AP", "The geolocated anchor point", GH_ParamAccess.item);
+            pManager.AddCurveParameter("AreaRect", "AR", "AreaRect", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Orient Tile", "OT", "To orient the tiles or not", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -60,6 +64,12 @@ namespace EarthToRhino.Components
             List<Mesh> meshList = new List<Mesh>();
             List<GH_Material> materialList = new List<GH_Material>();
             if (!DA.GetDataList(0, filepaths)) return;
+            Point3d anchorP = new Point3d();
+            if (!DA.GetData(1, ref anchorP)) return;
+            Curve rect = new PolyCurve();
+            if (!DA.GetData(2, ref rect)) return;
+            bool orient = false;
+            DA.GetData(3, ref orient);
 
             getAllFiles(filepaths);
 
@@ -98,6 +108,10 @@ namespace EarthToRhino.Components
 
                 }
             }
+
+
+            if (orient)
+              meshList =  OrientTiles(anchorP, rect, meshList);
 
             DA.SetDataList(0, meshList);
             DA.SetDataList(1, materialList);
@@ -142,6 +156,138 @@ namespace EarthToRhino.Components
                 RhinoApp.WriteLine("File import failed.");
                 return true; // Output false if the import failed
             }
+        }
+
+
+        public static List<Mesh> OrientTiles(Point3d point, Curve rect, List<Mesh> meshes)
+        {
+
+            GH_GeometryGroup g = new GH_GeometryGroup();
+            foreach (var m in meshes)
+                g.Objects.Add(Grasshopper.Kernel.GH_Convert.ToGeometricGoo(m.DuplicateMesh()));
+
+            Surface srf = Brep.CreatePlanarBreps(rect, 0.1)[0].Surfaces[0];
+            double u, v;
+            var closestPt = srf.ClosestPoint(point, out u, out v);
+            srf.SetDomain(0, new Interval(0, 1));
+            srf.SetDomain(1, new Interval(0, 1));
+            Point3d evalPoint;
+            Vector3d[] ders;
+            srf.Evaluate(u, v, 1, out evalPoint, out ders);
+
+
+            Plane pl2 = new Plane(evalPoint, ders[0], ders[1]);
+
+
+            List<Point3d> vertsFlat = new List<Point3d>();
+
+            foreach (var m in meshes)
+            {
+                vertsFlat.AddRange(m.Vertices.ToPoint3dArray());
+            }
+
+            List<Point3d> sortedByX = new List<Point3d>(vertsFlat);
+            sortedByX.Sort((a, b) => b.X.CompareTo(a.X));
+
+            List<Point3d> sortedByY = new List<Point3d>(vertsFlat);
+            sortedByY.Sort((a, b) => b.Y.CompareTo(a.Y));
+
+            Point3d upX = sortedByX[sortedByX.Count - 1],
+                douwnX = sortedByX[0],
+                upY = sortedByY[sortedByY.Count - 1],
+                downY = sortedByY[0];
+
+
+            Mesh tempMesh = new Mesh();
+            var corners = new Point3d[] {
+            upX,
+            upY,
+            douwnX,
+            downY
+        };
+
+            tempMesh.Vertices.AddVertices(corners);
+            tempMesh.Faces.AddFace(0, 1, 2, 3);
+            tempMesh.RebuildNormals();
+
+            var combined =
+                Brep.CreateFromMesh(tempMesh, true);
+            //    Brep.CreateFromCornerPoints(
+            //    upX,
+            //    upY,
+            //    douwnX,
+            //    downY,
+            //    1000000
+            //);
+
+
+            Point3d evalPoint_comb;
+            Vector3d[] ders_comb;
+            combined.Surfaces[0].Evaluate(u, v, 1, out evalPoint_comb, out ders_comb);
+
+
+            Plane pl1 = new Plane(evalPoint_comb, ders_comb[0], ders_comb[1]);
+
+
+
+
+            var ClosPoints = new List<Point3d>();
+            var distances = new List<double>();
+            foreach (var m in meshes)
+            {
+                var mClosestPoint = m.ClosestPoint(evalPoint);
+
+                ClosPoints.Add(mClosestPoint);
+                distances.Add((mClosestPoint - evalPoint).Length);
+            }
+
+            var sortedPoints = new List<Point3d>(ClosPoints);
+
+            for (int i = 0; i < ClosPoints.Count - 1; i++)
+            {
+                for (int j = i + 1; j < ClosPoints.Count; j++)
+                {
+                    if (distances[i] < distances[j])
+                    {
+                        var tempValue = distances[i];
+                        distances[i] = distances[j];
+                        distances[j] = tempValue;
+
+                        // Swap corresponding points
+                        var tempPoint = ClosPoints[i];
+                        ClosPoints[i] = ClosPoints[j];
+                        ClosPoints[j] = tempPoint;
+                    }
+                }
+            }
+
+
+            var target = sortedPoints[0];
+
+            Rhino.Geometry.Transform orient = Rhino.Geometry.Transform.ChangeBasis(pl2, pl1);
+            BoundingBox bbGroup = new BoundingBox(vertsFlat);
+            Rhino.Geometry.Transform translate = Rhino.Geometry.Transform.Translation(point - bbGroup.Center);
+            g.Transform(orient);
+            g.Transform(translate);
+
+            var orientedMeshes = new List<Mesh>();
+            foreach (var m in meshes)
+            {
+                var gO = m.DuplicateMesh();
+                if (gO.Transform(orient))
+                    orientedMeshes.Add(gO);
+            }
+
+            //foreach (var m in g.Objects)
+            //{
+
+            //    var nms = new Mesh();
+            //    Grasshopper.Kernel.GH_Convert.ToMesh(m, ref nms, new GH_Conversion());
+            //    orientedMeshes.Add(nms);
+
+            //}
+
+            return orientedMeshes;
         }
 
         /// <summary>
