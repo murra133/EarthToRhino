@@ -18,7 +18,7 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 - Jason Yang
 
 ## Architecture
-![Architecture](Assets/Architecture_Asset.png)
+![Architecture](Assets/Architecture.gif)
 
 ## Prerequisites
 - Rhino 8
