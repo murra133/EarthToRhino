@@ -20,7 +20,7 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 ## Architecture
 
 
-## Prerquisites
+## Prerequisites
 - Rhino 8
 - Cesium API Key
 
@@ -34,6 +34,8 @@ $ git clone https://github.com/murra133/EarthToRhino.git
 3. Build Solution to create "Earth To Rhino" Components
 4. 
 
+You will need a Google Developer Account. Enable that here: [Google Developer Account](https://developers.google.com/maps)
+The Google Map Tiles API needs to be enabled separately. You can do that here: [Map Tiles API](https://console.developers.google.com/apis/api/tile.googleapis.com/overview?project=945366370034)
 
 ## Acknowledgements 🙌
 
