@@ -3,7 +3,7 @@
 ![Rhino Spacesuit](/Assets/Rhino%20Spacesuit_Short.gif)
 
 ## What is Earth To Rhino
-EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗.
+EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.
 
 # Team members 👨‍🚀👩‍🚀
 - Paris Nikitidis
@@ -18,7 +18,22 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 - Jason Yang
 
 ## Architecture
-![Architecture](/Assets/ArchitectureAsset.png)
+![Architecture](Assets/Architecture.gif)
+
+```
+     +--------------+       +-------------------------------+                           
+     |Cesium Schema |       |      Grasshopper Plugin       |                           
+     +------+-------+       +---------------+---------------+                           
+            |                               |                                           
+            |                               |                                           
+            |               +-------------------------------+                           
+     +--------------+       |     Geolocation mapping       |                           
+     |              |       |                               |       +--------------+    
+     |     glTF     |-------|  3D Tiles Download REST API   |-------|  Rhinoceros  |    
+     |              |       |                               |       +--------------+    
+     +--------------+       | Convert to Rhino Mesh. Custom |                           
+                            +-------------------------------+                           
+```
 
 ## Prerequisites
 - Rhino 8
@@ -32,6 +47,9 @@ $ git clone https://github.com/murra133/EarthToRhino.git
 ```
 2. Open Solution in Visual Studio
 3. Build Solution to create "Earth To Rhino" Components
+4. You will need a Google Developer Account. Enable that here: [Google Developer Account](https://developers.google.com/maps).
+5. Once active, you will get an API key, which you'll need to download the tiles. Copy the API key and save somewhere save on your hard disk.
+6. The Google Map Tiles API needs to be enabled separately. You can do that here: [Map Tiles API](https://console.developers.google.com/apis/api/tile.googleapis.com/overview?).
 
 ## Acknowledgements 🙌
 
