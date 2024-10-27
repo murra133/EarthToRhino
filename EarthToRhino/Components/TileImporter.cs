@@ -38,7 +38,7 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Folder Path", "TP", "Folder Path to the tile", GH_ParamAccess.item);
+            pManager.AddTextParameter("File Paths", "F", "List of downloaded files", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -46,7 +46,6 @@ namespace EarthToRhino.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("All Files", "FP", "Lists all Files", GH_ParamAccess.list);
             pManager.AddMeshParameter("Mesh","Me","Meshes",GH_ParamAccess.list);
             pManager.AddGenericParameter("Material", "Ma", "Material", GH_ParamAccess.list);
         }
@@ -57,18 +56,12 @@ namespace EarthToRhino.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            string folderPath = "";
+            List<string> filepaths = new List<string>();
             List<Mesh> meshList = new List<Mesh>();
             List<GH_Material> materialList = new List<GH_Material>();
-            if (!DA.GetData(0, ref folderPath)) return;
+            if (!DA.GetDataList(0, filepaths)) return;
 
-            List<string> allFiles = getAllFiles(folderPath);
-
-            if (allFiles.Count == 0)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No files found in the folder");
-                return;
-            }
+            getAllFiles(filepaths);
 
             foreach (RhinoObject obj in doc.Objects)
             {
@@ -106,29 +99,24 @@ namespace EarthToRhino.Components
                 }
             }
 
+            DA.SetDataList(0, meshList);
+            DA.SetDataList(1, materialList);
+        }
+
+        protected override void AfterSolveInstance()
+        {
             doc.Objects.Clear();
-            DA.SetDataList(0, allFiles);
-            DA.SetDataList(1, meshList);
-            DA.SetDataList(2, materialList);
+            base.AfterSolveInstance();
 
         }
 
 
-        private List<string> getAllFiles(string folderPath)
+        private void getAllFiles(List<string> filepaths)
         {
-            List<string> allFiles = new List<string>();
-            DirectoryInfo d = new DirectoryInfo(folderPath); //Assuming Test is your Folder
-
-            FileInfo[] Files = d.GetFiles("*.glb"); //Getting Text files
-
-            foreach (FileInfo file in Files)
+            foreach (string path in filepaths)
             {
-                allFiles.Add(file.Name);
-                importFile(folderPath + "\\" + file.Name);
-
+                importFile(path);
             }
-
-            return allFiles;
         }
 
         private bool importFile(string filePath)

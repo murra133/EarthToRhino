@@ -56,6 +56,7 @@ namespace EarthToRhino.Components
         {
             pManager.AddNumberParameter("BBoxes", "BB", "All bounding boxes", GH_ParamAccess.list);
             pManager.AddPointParameter("Query Point ECEF", "QPE", "Query point in ECEF coordinates", GH_ParamAccess.item);
+            pManager.AddTextParameter("Loaded Files", "LF", "Lists of all loaded files", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -140,6 +141,7 @@ namespace EarthToRhino.Components
 
             DA.SetDataTree(0, dataTree);
             DA.SetData(1, queryPointECEFPoint);
+            DA.SetDataList(2, tileHandler.DownloadedFilePaths);
         }
 
         /// <summary>

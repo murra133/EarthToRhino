@@ -16,11 +16,15 @@ namespace EarthToRhino
         public Rectangle3d Boundary { get; private set; }
         public int MaxRecursionDepth { get; private set; }
 
+        public List<string> DownloadedFilePaths { get; private set; }
+
         public List<ChildDTO> ChildrenToDownload { get; private set; }
+
         public TileHandler( Rectangle3d boundary)
         {
             ChildrenToDownload = new List<ChildDTO>();
             Boundary = boundary;
+            DownloadedFilePaths = new List<string>();
         }
 
         public void SetRecursionDepth(int depth)
@@ -78,7 +82,9 @@ namespace EarthToRhino
             //string filename = Guid.NewGuid().ToString() + ".glb";
 
             string fullpath = Path.Combine(PathController.TempFolder, filename);
-            return WebAPI.DownloadGLB(uri, fullpath);
+            bool result = WebAPI.DownloadGLB(uri, fullpath);
+            if (result) DownloadedFilePaths.Add(fullpath);
+            return result;
         }
 
         public void UnpackTileRecursive(ChildDTO child, int recursionDepth)
