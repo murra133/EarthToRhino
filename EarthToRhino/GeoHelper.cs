@@ -5,6 +5,9 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Rhino;
+using Rhino.Geometry;
+using Plane = Rhino.Geometry.Plane;
 
 namespace EarthToRhino
 {
@@ -122,32 +125,19 @@ namespace EarthToRhino
             }
         }
 
-
-        /// <summary>
-        /// convert your target latitude and longitude to ECEF coordinates
-        /// Earth-Centered, Earth-Fixed (ECEF) coordinate system
-        /// </summary>
-        /// <param name="lat"></param>
-        /// <param name="lon"></param>
-        /// <param name="alt"></param>
-        /// <returns></returns>
-        public static Vector3 LatLonToECEF(double lat, double lon, double alt = 0)
+        public static Transform GetEarthAnchorTransform()
         {
-            // WGS84 ellipsoid constants
-            double a = 6378137; // Equatorial radius
-            double e2 = 6.69437999014e-3; // Square of eccentricity
+            var activeDoc = Rhino.RhinoDoc.ActiveDoc;
 
-            double latRad = lat * Math.PI / 180.0;
-            double lonRad = lon * Math.PI / 180.0;
+            var earthAchor = activeDoc.EarthAnchorPoint;
 
-            double N = a / Math.Sqrt(1 - e2 * Math.Sin(latRad) * Math.Sin(latRad));
+            var lat = earthAchor.EarthBasepointLatitude;
+            var lon = earthAchor.EarthBasepointLongitude;
 
-            double x = (N + alt) * Math.Cos(latRad) * Math.Cos(lonRad);
-            double y = (N + alt) * Math.Cos(latRad) * Math.Sin(lonRad);
-            double z = ((1 - e2) * N + alt) * Math.Sin(latRad);
-
-            return new Vector3((float)x, (float)y, (float)z);
+            var transform = earthAchor.GetModelToEarthTransform(activeDoc.ModelUnitSystem);
+            return transform;
         }
+
 
         public static bool IsPointInsideOBB(Vector3 point, Vector3 center, Vector3[] halfAxes)
         {
@@ -181,5 +171,79 @@ namespace EarthToRhino
             public Vector3 Center { get; set; }
             public Vector3[] HalfAxes { get; set; }
         }
+
+        public static Vector3d LatLonToECEF(double lat, double lon, double alt = 0)
+        {
+            // WGS84 ellipsoid constants
+            double a = 6378137; // Equatorial radius
+            double e2 = 6.69437999014e-3; // Square of eccentricity
+
+            double latRad = RhinoMath.ToRadians(lat);
+            double lonRad = RhinoMath.ToRadians(lon);
+
+            double N = a / Math.Sqrt(1 - e2 * Math.Sin(latRad) * Math.Sin(latRad));
+
+            double x = (N + alt) * Math.Cos(latRad) * Math.Cos(lonRad);
+            double y = (N + alt) * Math.Cos(latRad) * Math.Sin(lonRad);
+            double z = ((1 - e2) * N + alt) * Math.Sin(latRad);
+
+            return new Vector3d(x, y, z);
+        }
+
+        public class OrientedBoundingBox
+        {
+            public Point3d Center { get; set; }
+            public Vector3d HalfExtents { get; set; }
+            public Transform Rotation { get; set; }
+
+            public OrientedBoundingBox(Point3d center, Vector3d halfExtents, Transform rotation)
+            {
+                Center = center;
+                HalfExtents = halfExtents;
+                Rotation = rotation;
+            }
+
+            public bool Contains(Point3d point)
+            {
+                // Compute the vector from the box center to the point
+                Vector3d d = point - Center;
+
+                // Project d onto each of the local axes
+                double dx = d * new Vector3d(Rotation.M00, Rotation.M10, Rotation.M20);
+                double dy = d * new Vector3d(Rotation.M01, Rotation.M11, Rotation.M21);
+                double dz = d * new Vector3d(Rotation.M02, Rotation.M12, Rotation.M22);
+
+                // Check if the projected distances are within the half extents
+                return Math.Abs(dx) <= HalfExtents.X &&
+                       Math.Abs(dy) <= HalfExtents.Y &&
+                       Math.Abs(dz) <= HalfExtents.Z;
+            }
+        }
+        public static bool BoundingBoxesIntersect(BoundingBox bb1, BoundingBox bb2)
+        {
+            return !(bb1.Max.X < bb2.Min.X || bb1.Min.X > bb2.Max.X ||
+                     bb1.Max.Y < bb2.Min.Y || bb1.Min.Y > bb2.Max.Y ||
+                     bb1.Max.Z < bb2.Min.Z || bb1.Min.Z > bb2.Max.Z);
+        }
+
+        public static bool OBBIntersectsAABB(OrientedBoundingBox obb, BoundingBox aabb)
+        {
+            // Convert the OBB to a Box
+            Rhino.Geometry.Plane plane = new Rhino.Geometry.Plane(obb.Center,
+                new Vector3d(obb.Rotation.M00, obb.Rotation.M10, obb.Rotation.M20),
+                new Vector3d(obb.Rotation.M01, obb.Rotation.M11, obb.Rotation.M21));
+
+            Box obbBox = new Box(plane,
+                new Interval(-obb.HalfExtents.X, obb.HalfExtents.X),
+                new Interval(-obb.HalfExtents.Y, obb.HalfExtents.Y),
+                new Interval(-obb.HalfExtents.Z, obb.HalfExtents.Z));
+
+            // Get the bounding box of the OBB
+            BoundingBox obbBoundingBox = obbBox.BoundingBox;
+
+            // Use the custom method to test intersection
+            return BoundingBoxesIntersect(obbBoundingBox, aabb);
+        }
+
     }
 }
