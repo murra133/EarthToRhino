@@ -35,8 +35,6 @@ namespace EarthToRhino.Components
             pManager.AddRectangleParameter("Boundary", "B", "The boundary of the area to download", GH_ParamAccess.item);
             pManager.AddTextParameter("Temp Folder", "F", "The temporary folder to store the tiles", GH_ParamAccess.item);
             pManager.AddTextParameter("API Key", "K", "The API key", GH_ParamAccess.item);
-
-            pManager[1].Optional = true;
         }
 
         /// <summary>
@@ -54,7 +52,6 @@ namespace EarthToRhino.Components
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddNumberParameter("BBoxes", "BB", "All bounding boxes", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Query BBoxes", "QBB", "Bounding boxes that intersect with the boundary", GH_ParamAccess.list);
             pManager.AddPointParameter("Query Point ECEF", "QPE", "Query point in ECEF coordinates", GH_ParamAccess.item);
         }
 
@@ -111,45 +108,28 @@ namespace EarthToRhino.Components
 
             List<BoundingVolumeDTO> bboxes = tileHandler.GetAllBoundingVolumes();
 
-            // Initialize data structures
-            // GH_Structure<GH_Number> dataTree = new GH_Structure<GH_Number>();
-            // GH_Structure<GH_Number> queryBboxes = new GH_Structure<GH_Number>();
-            // List<Box> boundingBoxes = new List<Box>();
-            //
-            // // Loop through the bounding volumes
-            // for (int i = 0; i < bboxes.Count; i++)
-            // {
-            //     GH_Path path = new GH_Path(i);
-            //     BoundingVolumeDTO dto = bboxes[i];
-            //
-            //     // Check if the tile intersects with the boundary
-            //     bool isInBoundary = GeoHelper.IsTileInBoundary(boundary, dto);
-            //
-            //     // If true - add to queryBboxes
-            //     if (isInBoundary)
-            //     {
-            //         foreach (double num in dto.Box)
-            //         {
-            //             queryBboxes.Append(new GH_Number(num), path);
-            //         }
-            //     }
-            //
-            //     // Append the bounding volume to dataTree
-            //     foreach (double num in dto.Box)
-            //     {
-            //         dataTree.Append(new GH_Number(num), path);
-            //     }
-            // }
-
             // Output the query point for visualization
             // Convert the boundary center to ECEF for visualization
             Point3d queryPoint = boundary.Center;
             Point3d queryPointECEFPoint = GeoHelper.ModelPointToECEF(queryPoint);
 
-            // Set output data
+
+            // Output bounding boxes
+            GH_Structure<GH_Number> dataTree = new GH_Structure<GH_Number>();
+
+            for (int i = 0; i < bboxes.Count; i++)
+            {
+                GH_Path path = new GH_Path(i);
+                BoundingVolumeDTO dto = bboxes[i];
+
+                foreach (double num in dto.Box)
+                {
+                    dataTree.Append(new GH_Number(num), path);
+                }
+            }
+
             DA.SetDataTree(0, dataTree);
-            DA.SetDataTree(1, queryBboxes);
-            DA.SetData(2, queryPointECEFPoint);
+            DA.SetData(1, queryPointECEFPoint);
         }
 
         /// <summary>

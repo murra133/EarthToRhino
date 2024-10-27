@@ -125,16 +125,10 @@ namespace EarthToRhino
 
         public bool IsViableTile(ChildDTO child)
         {
-            // This is for Nico to implement. The idea here is to evaluate
-            // Whether or not child is one of the following:
-            // 1. Contains the child tile
-            // 2. Is contained by the child
-            // 3. Intersects the child
-
             // Check if the tile intersects with the boundary
-            bool isInBoundary = GeoHelper.IsTileInBoundary(boundary, dto);
+            bool isInBoundary = GeoHelper.IsTileInBoundary(this.Boundary, child.BoundingVolume);
 
-            return true;
+            return isInBoundary;
         }
 
 
