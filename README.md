@@ -26,10 +26,13 @@ EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNe
 
 ## Installation
 
-Install package by running:
+1. Install package by running:
 ```
 $ git clone https://github.com/murra133/EarthToRhino.git
 ```
+2. Open Solution in Visual Studio
+3. Build Solution to create "Earth To Rhino" Components
+4. 
 
 
 ## Acknowledgements 🙌
