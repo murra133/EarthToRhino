@@ -3,7 +3,7 @@
 ![Rhino Spacesuit](/Assets/Rhino%20Spacesuit_Short.gif)
 
 ## What is Earth To Rhino
-EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗.
+EarthToRhino is a bridge between Cesium, a 3d Geospatial platform 🌎, and McNeel's Rhinoceros 3D 🦏 through Grasshopper 🦗. This was developed during the 2024 AEC Tech hackathon hosted by CORE studio at Thornton Tomasetti.
 
 # Team members 👨‍🚀👩‍🚀
 - Paris Nikitidis
